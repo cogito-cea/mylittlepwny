@@ -16,10 +16,10 @@ newtype Ciphertext = Ciphertext [Word8]
   deriving (Show)
 
 data State = State {
-                w0 :: Word32,
-                w1 :: Word32,
-                w2 :: Word32,
-                w3 :: Word32,
+                state0 :: Word32,
+                state1 :: Word32,
+                state2 :: Word32,
+                state3 :: Word32,
                 schedule :: KeySchedule }
     deriving (Eq, Show)
 
@@ -42,8 +42,8 @@ gfAdd' :: Word8 -> Word8 -> Word8
 gfAdd' x y = x `xor` y
 
 expandPolynomial :: Word32 -> [Word32]
-expandPolynomial x =
-        expandPoly 1 x []
+expandPolynomial w =
+        expandPoly 1 w []
     where
         expandPoly 0 _ xs = filter (/=0) xs
         expandPoly y x xs = expandPoly (y `shiftL` 1) x ((y .&. x) : xs)
@@ -167,10 +167,10 @@ subWord w32 =
 
 subBytes :: State -> State
 subBytes st@(State w0 w1 w2 w3 _) =
-        st { w0 = (subWord w0),
-             w1 = (subWord w1),
-             w2 = (subWord w2),
-             w3 = (subWord w3) }
+        st { state0 = (subWord w0),
+             state1 = (subWord w1),
+             state2 = (subWord w2),
+             state3 = (subWord w3) }
 
 {----------------------------------------------------
     ShiftRows
@@ -178,14 +178,14 @@ subBytes st@(State w0 w1 w2 w3 _) =
 
 shiftRows :: State -> State
 shiftRows st@(State w0 w1 w2 w3 _) =
-        shift (octets w0) (octets w1) (octets w2) (octets w3)
+        shiftf (octets w0) (octets w1) (octets w2) (octets w3)
     where
-        shift ([w00,w01,w02,w03]) ([w10,w11,w12,w13])
-              ([w20,w21,w22,w23]) ([w30,w31,w32,w33]) =
-                    st { w0 = (fromOctets [w00,w11,w22,w33]),
-                         w1 = (fromOctets [w10,w21,w32,w03]),
-                         w2 = (fromOctets [w20,w31,w02,w13]),
-                         w3 = (fromOctets [w30,w01,w12,w23]) }
+        shiftf ([w00,w01,w02,w03]) ([w10,w11,w12,w13])
+               ([w20,w21,w22,w23]) ([w30,w31,w32,w33]) =
+                     st { state0 = (fromOctets [w00,w11,w22,w33]),
+                          state1 = (fromOctets [w10,w21,w32,w03]),
+                          state2 = (fromOctets [w20,w31,w02,w13]),
+                          state3 = (fromOctets [w30,w01,w12,w23]) }
 
 {----------------------------------------------------
     MixColumns
@@ -221,10 +221,10 @@ mixCol3 s0 s1 s2 s3 =
 
 mixColumns :: State -> State
 mixColumns st@(State w0 w1 w2 w3 _) =
-        st { w0 = (mixOctets w0),
-             w1 = (mixOctets w1),
-             w2 = (mixOctets w2),
-             w3 = (mixOctets w3) }
+        st { state0 = (mixOctets w0),
+             state1 = (mixOctets w1),
+             state2 = (mixOctets w2),
+             state3 = (mixOctets w3) }
     where
         mixOctets w32 = mix $ octets w32
         mix ([s0,s1,s2,s3]) =
@@ -243,21 +243,21 @@ setKey key st =
     st { schedule = nistKeyExpand key }
 
 addRoundKey :: State -> State
-addRoundKey st@(State w0 w1 w2 w3 (KeySchedule schedule)) =
-    st { w0 = w0 `xor` (schedule !! 0),
-         w1 = w1 `xor` (schedule !! 1),
-         w2 = w2 `xor` (schedule !! 2),
-         w3 = w3 `xor` (schedule !! 3),
-         schedule = KeySchedule $ drop 4 schedule }
+addRoundKey st@(State w0 w1 w2 w3 (KeySchedule ks)) =
+    st { state0 = w0 `xor` (ks !! 0),
+         state1 = w1 `xor` (ks !! 1),
+         state2 = w2 `xor` (ks !! 2),
+         state3 = w3 `xor` (ks !! 3),
+         schedule = KeySchedule $ drop 4 ks }
 
 {----------------------------------------------------
     key expansion
  ----------------------------------------------------}
 
 rotWord :: Word32 -> Word32
-rotWord w = rotate $ octets w
+rotWord w = rotf $ octets w
     where
-        rotate [w0, w1, w2, w3] = fromOctets [w1, w2, w3, w0]
+        rotf [w0, w1, w2, w3] = fromOctets [w1, w2, w3, w0]
 
 rcon :: [Word32]
 rcon =
