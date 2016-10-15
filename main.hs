@@ -1,20 +1,14 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
-import Data.ByteString.Lazy (ByteString)
-import Data.ByteString.Builder
+import Data.ByteString.Lazy as BL hiding (putStrLn, map)
+import Data.ByteString.Lazy.Char8 as BC (unpack)
+import Data.ByteString.Lazy.Builder as BL
 import Data.Word
 
 import AesReference
-
--- key = Key128 $ RawKey [0x01234567, 0x89abcdef, 0x12345678, 0x9abcdef0]
-
--- text :: Plaintext
--- text = Plaintext [ 0x00, 0x00, 0x00, 0x00
---                  , 0x00, 0x00, 0x00, 0x00
---                  , 0x00, 0x00, 0x00, 0x00
---                  , 0x00, 0x00, 0x00, 0x00]
-
-
+import Masking
 
 key :: Key
 key = Key128 $ RawKey [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f]
@@ -25,22 +19,47 @@ text = Plaintext [ 0x00, 0x11, 0x22, 0x33
                  , 0x88, 0x99, 0xaa, 0xbb
                  , 0xcc, 0xdd, 0xee, 0xff]
 
-hypothesis :: Key -> Plaintext -> Ciphertext
-hypothesis key plaintext =
-  stateToCiphertext $
-  subBytes . addRoundKey $
-  setKey key $ plaintextToState plaintext
-
--- State -> State
 
 
 main :: IO ()
 main = do
-  putStrLn "+++"
-  print $ cipherToHex $ hypothesis key text
+  print $ aesBlockEncrypt key text
+  print $ aesMaskedBlockEncrypt
+    (PreSubBytesMask $ Mask8 0x13)
+    (PostSubBytesMask $ Mask8 0x7A)
+    (MixColumnMask 0x55 0xAA 0x69 0x8B)
+    key text
+
+
+
+hypFirstRoundSBOX :: Key -> Plaintext -> State
+hypFirstRoundSBOX k t =
+  subBytes . addRoundKey $
+  aesInit k t
 
 toHex :: Word8 -> ByteString
 toHex = toLazyByteString . word8Hex
 
 cipherToHex :: Ciphertext -> [ByteString]
 cipherToHex (Ciphertext cs) = map toHex cs
+
+
+toWord8 :: ByteString -> [Word8]
+toWord8 xs =
+  let space = BL.head " "
+  in map (read . BC.unpack) $ BL.split space xs
+
+
+{-
+
+TODO list
+
+pour être plus efficace
+
+supprimer la représentation texte des plaintext.
+ou plutôt prendre par défaut une représentation binaire.
+- DPA scripts
+- template expe
+- ce truc
+
+-}
