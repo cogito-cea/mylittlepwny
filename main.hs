@@ -5,6 +5,7 @@ module Main where
 import Data.ByteString.Lazy as BL hiding (putStrLn, map)
 import Data.ByteString.Lazy.Char8 as BC (unpack)
 import Data.ByteString.Lazy.Builder as BL
+import Data.ByteString.Lazy.Builder.ASCII (word8Hex)
 import Data.Word
 
 import AesReference

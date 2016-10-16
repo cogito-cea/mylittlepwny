@@ -36,7 +36,9 @@ instance Mask Mask8 where
 
 type Mask32 = Word32
 newtype PreSubBytesMask = PreSubBytesMask Mask8
+  deriving (Show)
 newtype PostSubBytesMask = PostSubBytesMask Mask8
+  deriving (Show)
 
 data MixColumnMask =
   MixColumnMask

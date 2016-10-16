@@ -10,10 +10,10 @@ import Data.Array
  ----------------------------------------------------}
 
 newtype Plaintext = Plaintext [Word8]
-  deriving (Show)
+  deriving (Eq, Show)
 
 newtype Ciphertext = Ciphertext [Word8]
-  deriving (Show)
+  deriving (Eq, Show)
 
 data State = State {
                 state0 :: Word32,
