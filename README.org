@@ -1,0 +1,40 @@
+
+* required dependencies
+
+- [[https://docs.haskellstack.org][stack]]  (Debian package =haskell-stack=)
+
+* build & run
+
+** build
+
+#+BEGIN_SRC sh
+make build
+#+END_SRC
+
+** run
+
+#+BEGIN_SRC sh
+make run
+#+END_SRC
+
+** test
+
+#+BEGIN_SRC sh
+make test
+#+END_SRC
+
+* schéma de masquage Herbst et al., 2006
+
+******** TODO application du masque =m= dans le key schedule
+    :PROPERTIES:
+  :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+  :END:
+
+* refactoring sur les structures de données
+
+******** TODO code refactoring
+    :PROPERTIES:
+  :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+  :END:
+
+******** INACTIVE mettre à jour les tests
