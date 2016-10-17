@@ -40,9 +40,9 @@ tests = testGroup "Tests" [ unitTests
                           ]
 
 unitTests = testGroup "Unit tests: excerpt from the NIST test suite"
-  [ testCase "reference AES, CBC mode, 128bit key" $
+  [ testCase "reference AES, ECB mode, 128bit key" $
     aesBlockEncrypt key plaintext @?= cipher
-  , testCase "masked AES, CBC mode, 128bit key" $
+  , testCase "masked AES,    ECB mode, 128bit key" $
     aesMaskedBlockEncrypt m m' mc key plaintext @?= cipher
   ]
   where
@@ -61,9 +61,9 @@ unitTests = testGroup "Unit tests: excerpt from the NIST test suite"
 
 properties :: TestTree
 properties = testGroup "Properties: first order masking scheme"
-  [ testProperty "a simple test property to validate the test program" $
+  [ testProperty "a simple property-based test to validate this test program" $
     forAll $ \a b r -> (a :: Word8) `xor` (b :: Word8) == a `xor` (r :: Word8) `xor` b `xor` r
-  , testProperty "equality for CBC encryption with 128-bit keys" $
+  , testProperty "equality for ECB encryption with 128-bit keys" $
     forAll $ \m m' mc ->
       aesMaskedBlockEncrypt m m' mc key plaintext == aesBlockEncrypt key plaintext
   ]
