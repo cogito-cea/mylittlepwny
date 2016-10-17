@@ -1,3 +1,9 @@
+An implementation of the AES block cipher in Haskell.  The purpose of
+this implementation is to perform some fast prototyping on algorithms
+based on AES.
+
+The implementation of the =AesReference= module is based on the blog
+post [[http://unconceived.net/blog/2015/01/29/aes-reference-haskell.html][AES reference implementation in Haskell]], by Justin Handville.
 
 * required dependencies
 
