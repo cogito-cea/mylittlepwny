@@ -1,10 +1,10 @@
 module Masking where
 
-import Data.Bits
-import Data.Word
-import Data.Array
+import           Data.Array
+import           Data.Bits
+import           Data.Word
 
-import AesReference
+import           AesReference
 
 (°) = flip (.)
 

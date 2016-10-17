@@ -1,21 +1,21 @@
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE DeriveGeneric         #-}
 
 import           Test.SmallCheck.Series
+import           Test.SmallCheck.Series.Instances
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.SmallCheck
-import Test.SmallCheck.Series.Instances
 
-import Data.Bits
-import Data.Word
-import GHC.Generics
+import           Data.Bits
+import           Data.Word
+import           GHC.Generics
 
-import AesReference
-import Masking
+import           AesReference
+import           Masking
 
 newtype DeleteThis = DeleteThis Int
   deriving (Eq, Show)

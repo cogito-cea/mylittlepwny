@@ -2,14 +2,14 @@
 
 module Main where
 
-import Data.ByteString.Lazy as BL hiding (putStrLn, map)
-import Data.ByteString.Lazy.Char8 as BC (unpack)
-import Data.ByteString.Lazy.Builder as BL
-import Data.ByteString.Lazy.Builder.ASCII (word8Hex)
-import Data.Word
+import           Data.ByteString.Lazy               as BL hiding (map, putStrLn)
+import           Data.ByteString.Lazy.Builder       as BL
+import           Data.ByteString.Lazy.Builder.ASCII (word8Hex)
+import           Data.ByteString.Lazy.Char8         as BC (unpack)
+import           Data.Word
 
-import AesReference
-import Masking
+import           AesReference
+import           Masking
 
 key :: Key
 key = Key128 $ RawKey [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f]

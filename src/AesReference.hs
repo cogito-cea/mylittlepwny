@@ -1,9 +1,9 @@
 module AesReference where
 
-import Data.Word
-import Data.Bits
-import Data.List
-import Data.Array
+import           Data.Array
+import           Data.Bits
+import           Data.List
+import           Data.Word
 
 {----------------------------------------------------
    data types
@@ -16,10 +16,10 @@ newtype Ciphertext = Ciphertext [Word8]
   deriving (Eq, Show)
 
 data State = State {
-                state0 :: Word32,
-                state1 :: Word32,
-                state2 :: Word32,
-                state3 :: Word32,
+                state0   :: Word32,
+                state1   :: Word32,
+                state2   :: Word32,
+                state3   :: Word32,
                 schedule :: KeySchedule }
     deriving (Eq, Show)
 
