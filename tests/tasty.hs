@@ -15,6 +15,7 @@ import           Data.Word
 import           GHC.Generics
 
 import           AesReference
+import           AesImport
 import           Masking
 
 newtype DeleteThis = DeleteThis Int
@@ -41,20 +42,19 @@ tests = testGroup "Tests" [ unitTests
 
 unitTests = testGroup "Unit tests: excerpt from the NIST test suite"
   [ testCase "reference AES, ECB mode, 128bit key" $
-    aesBlockEncrypt key plaintext @?= cipher
+    aesBlockEncrypt k t @?= c
   , testCase "masked AES,    ECB mode, 128bit key" $
-    aesMaskedBlockEncrypt m m' mc key plaintext @?= cipher
+    aesMaskedBlockEncrypt m m' mc k t @?= c
   ]
   where
-    plaintext = Plaintext [ 0x00, 0x11, 0x22, 0x33
-                          , 0x44, 0x55, 0x66, 0x77
-                          , 0x88, 0x99, 0xaa, 0xbb
-                          , 0xcc, 0xdd, 0xee, 0xff ]
-    key = Key128 $ RawKey [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f]
-    cipher = Ciphertext [ 0x69, 0xc4, 0xe0, 0xd8
-                        , 0x6a, 0x7b, 0x04, 0x30
-                        , 0xd8, 0xcd, 0xb7, 0x80
-                        , 0x70, 0xb4, 0xc5, 0x5a]
+    t = plaintext $ toText
+      "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255"
+
+    k = key $ toText
+      "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"
+    c = ciphertext $ toText
+      "105 196 224 216 106 123 4 48 216 205 183 128 112 180 197 90"
+
     m = PreSubBytesMask $ Mask8 0x13
     m' = PostSubBytesMask $ Mask8 0x7A
     mc = MixColumnMask 0x55 0xAA 0x69 0x8B
@@ -65,11 +65,10 @@ properties = testGroup "Properties: first order masking scheme"
     forAll $ \a b r -> (a :: Word8) `xor` (b :: Word8) == a `xor` (r :: Word8) `xor` b `xor` r
   , testProperty "equality for ECB encryption with 128-bit keys" $
     forAll $ \m m' mc ->
-      aesMaskedBlockEncrypt m m' mc key plaintext == aesBlockEncrypt key plaintext
+      aesMaskedBlockEncrypt m m' mc k t == aesBlockEncrypt k t
   ]
   where
-    plaintext = Plaintext [ 0x00, 0x11, 0x22, 0x33
-                          , 0x44, 0x55, 0x66, 0x77
-                          , 0x88, 0x99, 0xaa, 0xbb
-                          , 0xcc, 0xdd, 0xee, 0xff ]
-    key = Key128 $ RawKey [0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f]
+    t = plaintext $ toText
+      "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255"
+    k = key $ toText
+      "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"
