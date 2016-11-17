@@ -39,7 +39,10 @@ newtype RawKey = RawKey [Word32]
     the key schedule
  ----------------------------------------------------}
 newtype KeySchedule = KeySchedule [Word32]
-    deriving (Eq, Show)
+    deriving (Eq)
+-- | we don't want to show the KeySchedule because it contains an infinite list.
+instance Show KeySchedule where
+  show (KeySchedule _) = "KeySchedule [*hidden*]"
 
 defaultKeySchedule :: KeySchedule
 defaultKeySchedule = KeySchedule $ repeat 0x00000000
