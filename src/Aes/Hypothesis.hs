@@ -31,3 +31,8 @@ firstRoundSBOX byte ts =
 
 hammingWeight :: [[Word8]] -> [[Int]]
 hammingWeight = (fmap.fmap) popCount
+
+
+exportHypothesis :: FilePath -> [[Int]] -> IO ()
+exportHypothesis f hyp =
+  writeFile f $ unlines $ map unwords $ (fmap.fmap) show hyp
