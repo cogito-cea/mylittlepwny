@@ -18,11 +18,6 @@ import           AesReference
 import           AesImport
 import           Masking
 
-newtype DeleteThis = DeleteThis Int
-  deriving (Eq, Show)
-instance Monad m => Serial m DeleteThis where
-    series = newtypeCons DeleteThis
-
 instance Monad m => Serial m Mask8 where
     series = newtypeCons Mask8
 instance Monad m => Serial m PreSubBytesMask where
