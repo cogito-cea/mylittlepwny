@@ -59,6 +59,19 @@ instance HasAesText Ciphertext where
   toAesText (Ciphertext ts) = AesText (length ts) ts
   fromAesText (AesText _ ts) = Ciphertext ts
 
+instance HasAesText State where
+  toAesText (State s0 s1 s2 s3 _) =
+    AesText 16 (octets s0 ++ octets s1 ++ octets s2 ++ octets s3)
+
+  -- | a 'State' cannot be imported from text because we cannot define
+  -- the 'KeySchedule' data without knowledge of the 'Key' value.  calling
+  -- 'fromAesText' calls 'error'.
+  --
+  -- To avoid this, one would need to define two separate typeclasses
+  -- for import and export.  'State' would only be an instance of the
+  -- export class.
+  fromAesText = undefined
+
 -- | file import, with Strings.
 importTexts :: FilePath   -- ^ the filename of the input plaintexts file
            -> IO [AesText]
