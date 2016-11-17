@@ -23,6 +23,7 @@ library
   exposed-modules:     AesReference
                      , AesImport
                      , Masking
+                     , Aes.Hypothesis
   other-modules:       Aes.Reference
                      , Aes.Types
   build-depends:       base >=4.8 && <4.9

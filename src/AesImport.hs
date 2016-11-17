@@ -3,6 +3,10 @@
 
 module AesImport
   ( AesText
+  , Byte
+  , getByte
+  , tow32
+
   , HasAesText(..)
   , exportTexts
   , importTexts
@@ -19,6 +23,11 @@ data AesText = AesText
   Int     -- ^ the size of the plaintext, in number of bytes
   [Word8] -- ^ the plaintext bytes
   deriving (Show)
+
+type Byte = Int
+
+getByte :: Byte -> AesText -> Word8
+getByte x (AesText _ t) = t !! x
 
 instance Monoid AesText where
   mempty = AesText 0 []
