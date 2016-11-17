@@ -1,5 +1,5 @@
+{-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module AesImport
   ( AesText
@@ -8,6 +8,7 @@ module AesImport
   , tow32
 
   , HasAesText(..)
+
   , exportTexts
   , importTexts
   ) where
@@ -82,20 +83,19 @@ instance HasAesText State where
   fromAesText = undefined
 
 -- | file import, with Strings.
-importTexts :: FilePath   -- ^ the filename of the input plaintexts file
-           -> IO [AesText]
+importTexts :: HasAesText a =>
+               FilePath   -- ^ the filename of the input plaintexts file
+            -> IO [a]
 importTexts f = do
   raw <- lines <$> Prelude.readFile f
-  return $ map toAesText raw
+  return $ map stringImport raw
 
 -- | file export.
-exportTexts :: FilePath   -- ^ the filename of the output file
-            -> [AesText]
+exportTexts :: HasAesText a =>
+               FilePath   -- ^ the filename of the output file
+            -> [a]
             -> IO ()
-exportTexts f ts = Prelude.writeFile f $ unlines $ map fromAesText ts
-
-
-
+exportTexts f ts = Prelude.writeFile f $ unlines $ map exportString ts
 
 -- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
 -- TODO: key :: AesText -> Maybe Key

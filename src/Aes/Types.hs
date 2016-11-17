@@ -51,7 +51,6 @@ defaultKeySchedule = KeySchedule $ repeat 0x00000000
 {----------------------------------------------------
     low level operations
  ----------------------------------------------------}
-
 octets :: Word32 -> [Word8]
 octets i =
     [ fromIntegral $ i `shiftR` 24

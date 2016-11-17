@@ -14,11 +14,11 @@ import           Data.Bits
 import           Data.Word
 import           GHC.Generics
 
-import           AesReference
 import           AesImport
+import           AesReference
 import           Masking
 
-import Aes.Types
+import           Aes.Types
 
 instance Monad m => Serial m Mask8 where
   series = newtypeCons Mask8
