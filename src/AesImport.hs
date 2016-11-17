@@ -4,9 +4,12 @@ module AesImport
   , key
   , plaintext
   , toText
+  , exportTexts
   , importTexts
   ) where
 
+import           Data.Char (isSpace)
+import           Data.List (dropWhileEnd)
 import           Data.Word
 
 import           Aes.Types
@@ -24,11 +27,17 @@ instance Monoid Text where
   mconcat = foldr mappend mempty
 
 -- | file import, with Strings.
-importTexts :: String         -- ^ the filename of the input plaintexts file
+importTexts :: FilePath   -- ^ the filename of the input plaintexts file
            -> IO [Text]
-importTexts s = do
-  raw <- lines <$> Prelude.readFile s
+importTexts f = do
+  raw <- lines <$> Prelude.readFile f
   return $ map toText raw
+
+-- | file export.
+exportTexts :: FilePath   -- ^ the filename of the output file
+            -> [Text]
+            -> IO ()
+exportTexts f ts = Prelude.writeFile f $ unlines $ map fromText ts
 
 -- | conversion of a 'Text' data structure to 'Plaintext'.
 plaintext :: Text -> Plaintext
@@ -46,6 +55,13 @@ toText xs = foldr step mempty (words xs)
   where
     step :: String -> Text -> Text
     step t = mappend (Text 1 [read t])
+
+-- | Create a textual 'String' representation from a 'Text'.
+fromText :: Text -> String
+fromText (Text _ ts) = dropWhileEnd isSpace $ foldr step "" ts
+  where
+    step :: Word8 -> String -> String
+    step w x = show w ++ " " ++ x
 
 -- | create an AES 'Key'.  Calls 'error' if the input Text is not correctly sized.
 -- TODO: key :: Text -> Maybe Key
