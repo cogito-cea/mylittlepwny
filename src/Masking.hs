@@ -4,7 +4,9 @@ import           Data.Array
 import           Data.Bits
 import           Data.Word
 
-import           AesReference
+import           Aes.Reference
+import           Aes.Types
+
 
 (°) = flip (.)
 
