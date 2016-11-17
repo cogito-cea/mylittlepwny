@@ -2,10 +2,6 @@
 
 module Main where
 
-import           Data.ByteString.Lazy       as BL hiding (map, putStrLn)
-import           Data.ByteString.Lazy.Char8 as BC (unpack)
-import           Data.Word
-
 import           Aes.Hypothesis
 import           AesImport
 import           AesReference
@@ -28,8 +24,3 @@ main = do
   texts <- importTexts "plaintexts.txt"
   let hyps = hammingWeight $ firstRoundSBOX 0 texts
   exportHypothesis "test.txt" hyps
-
-toWord8 :: ByteString -> [Word8]
-toWord8 xs =
-  let space = BL.head " "
-  in map (read . BC.unpack) $ BL.split space xs
