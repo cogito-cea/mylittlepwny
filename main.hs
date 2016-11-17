@@ -11,10 +11,10 @@ import           AesImport
 import           Masking
 
 thekey :: Key
-thekey = key $ toText "1 35 69 103 137 171 205 239 18 52 86 120 154 188 222 240"
+thekey = stringImport "1 35 69 103 137 171 205 239 18 52 86 120 154 188 222 240"
 
 thetext :: Plaintext
-thetext = plaintext $ toText "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255"
+thetext = stringImport "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255"
 
 main :: IO ()
 main = do
@@ -24,6 +24,7 @@ main = do
     (PostSubBytesMask $ Mask8 0x7A)
     (MixColumnMask 0x55 0xAA 0x69 0x8B)
     thekey thetext
+  print $ hypFirstRoundSBOX thekey thetext
 
 hypFirstRoundSBOX :: Key -> Plaintext -> State
 hypFirstRoundSBOX k t =

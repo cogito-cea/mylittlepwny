@@ -1,9 +1,9 @@
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 module AesImport
-  ( Text
-  , ciphertext
-  , key
-  , plaintext
-  , toText
+  ( AesText
+  , HasAesText(..)
   , exportTexts
   , importTexts
   ) where
@@ -14,57 +14,69 @@ import           Data.Word
 
 import           Aes.Types
 
--- | a plaintext is a sized list of bytes
-data Text = Text
+-- | a generic data structure to handle import and export.
+data AesText = AesText
   Int     -- ^ the size of the plaintext, in number of bytes
   [Word8] -- ^ the plaintext bytes
   deriving (Show)
 
-instance Monoid Text where
-  mempty = Text 0 []
-  mappend (Text n t) (Text n' t') =
-    Text (n+n') (t ++ t')
+instance Monoid AesText where
+  mempty = AesText 0 []
+  mappend (AesText n t) (AesText n' t') =
+    AesText (n+n') (t ++ t')
   mconcat = foldr mappend mempty
+
+class HasAesText a where
+  -- | create a 'AesText' from a textual string representation.
+  --   Expected string format: decimal integers separated by space characters.
+  toAesText :: a -> AesText
+  -- | Create a textual 'String' representation from a 'AesText'.
+  fromAesText :: AesText -> a
+  -- | Generalised import of 'String's. A decimal integer representation is expected.
+  stringImport :: String -> a
+  stringImport = fromAesText . toAesText
+  -- | Generalised export to 'String's.
+  exportString :: a -> String
+  exportString = fromAesText . toAesText
+
+instance HasAesText String where
+  toAesText xs = foldr step mempty (words xs)
+    where
+      step :: String -> AesText -> AesText
+      step t = mappend (AesText 1 [read t])
+  fromAesText (AesText _ ts) = dropWhileEnd isSpace $ foldr step "" ts
+    where step w x = show w ++ " " ++ x
+
+instance HasAesText Key where
+  toAesText = undefined
+  fromAesText = key
+
+instance HasAesText Plaintext where
+  toAesText (Plaintext ts) = AesText (length ts) ts
+  fromAesText (AesText _ ts) = Plaintext ts
+
+instance HasAesText Ciphertext where
+  toAesText (Ciphertext ts) = AesText (length ts) ts
+  fromAesText (AesText _ ts) = Ciphertext ts
 
 -- | file import, with Strings.
 importTexts :: FilePath   -- ^ the filename of the input plaintexts file
-           -> IO [Text]
+           -> IO [AesText]
 importTexts f = do
   raw <- lines <$> Prelude.readFile f
-  return $ map toText raw
+  return $ map toAesText raw
 
 -- | file export.
 exportTexts :: FilePath   -- ^ the filename of the output file
-            -> [Text]
+            -> [AesText]
             -> IO ()
-exportTexts f ts = Prelude.writeFile f $ unlines $ map fromText ts
+exportTexts f ts = Prelude.writeFile f $ unlines $ map fromAesText ts
 
--- | conversion of a 'Text' data structure to 'Plaintext'.
-plaintext :: Text -> Plaintext
-plaintext (Text _ ts) = Plaintext ts
 
--- | conversion of a 'Text' data structure to 'Ciphertext'.
-ciphertext :: Text -> Ciphertext
-ciphertext (Text _ ts) = Ciphertext ts
 
--- | create a 'Text' from a textual string representation.
---   Expected string format: decimal integers separated by space characters.
-toText :: String    -- ^ the input string
-       -> Text
-toText xs = foldr step mempty (words xs)
-  where
-    step :: String -> Text -> Text
-    step t = mappend (Text 1 [read t])
 
--- | Create a textual 'String' representation from a 'Text'.
-fromText :: Text -> String
-fromText (Text _ ts) = dropWhileEnd isSpace $ foldr step "" ts
-  where
-    step :: Word8 -> String -> String
-    step w x = show w ++ " " ++ x
-
--- | create an AES 'Key'.  Calls 'error' if the input Text is not correctly sized.
--- TODO: key :: Text -> Maybe Key
+-- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
+-- TODO: key :: AesText -> Maybe Key
 key :: AesText -> Key
 key (AesText 16 bs) = Key128 $ RawKey $ tow32 bs
 key (AesText 24 bs) = Key192 $ RawKey $ tow32 bs
