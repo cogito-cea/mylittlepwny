@@ -6,8 +6,9 @@ import           Data.ByteString.Lazy       as BL hiding (map, putStrLn)
 import           Data.ByteString.Lazy.Char8 as BC (unpack)
 import           Data.Word
 
-import           AesReference
+import           Aes.Hypothesis
 import           AesImport
+import           AesReference
 import           Masking
 
 thekey :: Key
@@ -24,12 +25,9 @@ main = do
     (PostSubBytesMask $ Mask8 0x7A)
     (MixColumnMask 0x55 0xAA 0x69 0x8B)
     thekey thetext
-  print $ hypFirstRoundSBOX thekey thetext
-
-hypFirstRoundSBOX :: Key -> Plaintext -> State
-hypFirstRoundSBOX k t =
-  subBytes . addRoundKey $
-  aesInit k t
+  texts <- importTexts "plaintexts.txt"
+  let hyps = hammingWeight $ firstRoundSBOX 0 texts
+  exportHypothesis "test.txt" hyps
 
 toWord8 :: ByteString -> [Word8]
 toWord8 xs =
