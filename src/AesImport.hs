@@ -65,16 +65,16 @@ fromText (Text _ ts) = dropWhileEnd isSpace $ foldr step "" ts
 
 -- | create an AES 'Key'.  Calls 'error' if the input Text is not correctly sized.
 -- TODO: key :: Text -> Maybe Key
-key :: Text -> Key
-key (Text 16 bs) = Key128 $ toRaw bs
-key (Text 24 bs) = Key192 $ toRaw bs
-key (Text 32 bs) = Key256 $ toRaw bs
-key (Text n _)   = error $ "unknown key length: " ++ show n
-toRaw :: [Word8] -> RawKey
-toRaw = RawKey . tow32
+key :: AesText -> Key
+key (AesText 16 bs) = Key128 $ RawKey $ tow32 bs
+key (AesText 24 bs) = Key192 $ RawKey $ tow32 bs
+key (AesText 32 bs) = Key256 $ RawKey $ tow32 bs
+key (AesText n _)   = error $ "unknown key length: " ++ show n
+-- | Convert each group of 4 'Word8's to a 'Word32'.
 tow32 :: [Word8] -> [Word32]
-tow32 (a:b:c:d:[]) = [fromOctets [a,b,c,d]]
-tow32 (a:b:c:d:w8s) = fromOctets [a,b,c,d] : tow32 w8s
+tow32 [] = []
+tow32 ws = let (w32, rest) = splitAt 4 ws
+  in fromOctets w32 : tow32 rest
 
 --
 -- | file import, with BL.ByteString
