@@ -1,0 +1,9 @@
+image: haskell:7.10.3
+
+before_script:
+  - stack setup
+
+main:
+  script:
+    - stack build
+    - stack test
