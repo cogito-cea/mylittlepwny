@@ -1,3 +1,7 @@
+--
+-- Adapted from:
+--   unconceived.net - Justin Handville - j.p.handville (at) gmail DOT com
+-- 
 module AesReference
   ( -- data definitions
     Plaintext
