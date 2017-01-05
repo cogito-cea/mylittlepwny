@@ -43,6 +43,10 @@ executable aes-test
   build-depends:       base >=4.8 && <4.9
                      , bytestring
                      , haskell-aes
+  if !flag(debug)
+    ghc-options:    -Wall -threaded -O2
+  else
+    ghc-options:    -Wall -threaded
 
   -- Directories containing source files.
   hs-source-dirs:      .
