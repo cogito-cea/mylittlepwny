@@ -15,6 +15,7 @@ import           Data.Word
 newtype Plaintext = Plaintext [Word8]
   deriving (Eq, Show)
 
+-- | a Ciphertext is a list of Word8
 newtype Ciphertext = Ciphertext [Word8]
   deriving (Eq, Show)
 
