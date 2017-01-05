@@ -24,6 +24,8 @@ library
                      , AesImport
                      , Masking
                      , Aes.Hypothesis
+                     , Aes.Random
+                     , Aes.QuickCheck
   other-modules:       Aes.Reference
                      , Aes.Types
   build-depends:       base >=4.8 && <4.9
@@ -44,6 +46,7 @@ executable aes-test
   -- Other library packages from which modules are imported.
   build-depends:       base >=4.8 && <4.9
                      , bytestring
+                     , criterion
                      , haskell-aes
   if !flag(debug)
     ghc-options:    -Wall -threaded -O2
