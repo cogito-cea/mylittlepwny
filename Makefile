@@ -4,7 +4,7 @@ build:
 
 .PHONY: run
 run: build
-	stack exec aes-test -- --output random.html
+	stack exec aes-test
 
 .PHONY: test
 test:

@@ -2,43 +2,15 @@
 
 module Main where
 
-import           Criterion.Main
-import           System.Random
-
 import           Aes.Hypothesis
 import           AesImport
 import           AesReference
 import           Masking
 
-import           Aes.QuickCheck
-import           Aes.Random
-
 main :: IO ()
 main = do
-  criterionRandom
-  -- computeFirstSBOX thekey thetext
-  -- compute_100000_CPA_hypothesis
-
-
-benchRandom :: Int -> [Plaintext]
-benchRandom n = take n $ randoms (mkStdGen 0)
-
-benchQuickCheck :: Int -> IO [Plaintext]
-benchQuickCheck n = take n <$> generate infiniteList
-
-criterionRandom :: IO ()
-criterionRandom = defaultMain
-  [ bgroup "random"
-    [ bench "1000"    $ nf benchRandom 1000
-    , bench "10000"   $ nf benchRandom 10000
-    , bench "100000"  $ nf benchRandom 100000
-    ]
-  , bgroup "quickcheck"
-    [ bench "1000"    $ nfIO $ benchQuickCheck 1000
-    , bench "10000"   $ nfIO $ benchQuickCheck 10000
-    , bench "100000"  $ nfIO $ benchQuickCheck 100000
-    ]
-  ]
+  computeFirstSBOX thekey thetext
+  compute_100000_CPA_hypothesis
 
 -- | compute the output of the first SBOX
 computeFirstSBOX :: Key -> Plaintext -> IO ()
