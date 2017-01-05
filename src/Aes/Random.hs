@@ -19,14 +19,8 @@ instance R.Random Plaintext where
   randomR = randomR
 
 random :: R.RandomGen g => g -> (Plaintext, g)
-random g = let (ws, x) = randomW8List 16 g
-               -- TODO mesures de perfs. tester avec INLINE
-               randomW8List :: R.RandomGen g => Int -> g -> ([Word8], g)
-               randomW8List 0 k = ([], k)
-               randomW8List n k = let (x', g')  = R.random k
-                                      (xs', _) = randomW8List (n-1) g'
-                                  in  (xs' ++ [x'], g')
-            in  (Plaintext ws, x)
+random g = let (g0, g1) = R.split g
+            in (Plaintext $ take 16 $ R.randoms g0, g1)
 
 -- | 'randomR' considers each byte value separately:
 -- considering a = Plaintext [lo0, lo1, ..., lo15]
