@@ -8,6 +8,7 @@ import           Data.ByteString.Lazy.Builder.ASCII (word8Hex)
 import           Data.List
 import           Data.Word
 
+
 {----------------------------------------------------
    data types
  ----------------------------------------------------}
@@ -35,6 +36,14 @@ data Key = Key128 RawKey | Key192 RawKey | Key256 RawKey
 
 newtype RawKey = RawKey [Word32]
   deriving (Show)
+
+-- TODO.
+-- - je n'aime pas la définition de RawKey, parce que la taille de la
+--   liste [Word32] devrait être fixe, et pouvoir prendre quelques
+--   valeurs seulement, selon qu'on travaille en AES-128, AES-192 ou
+--   AES-256.
+-- - regarder comment ce type est implémenté dans les bibliothèques crypto.
+
 
 {----------------------------------------------------
     the key schedule
