@@ -1,6 +1,9 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Aes.Types
   where
 
+import           Control.DeepSeq                    (NFData)
 import           Data.Bits
 import           Data.ByteString.Lazy               (ByteString)
 import           Data.ByteString.Lazy.Builder       (toLazyByteString)
@@ -14,7 +17,7 @@ import           Data.Word
  ----------------------------------------------------}
 
 newtype Plaintext = Plaintext [Word8]
-  deriving (Eq, Show)
+  deriving (Eq, Show, NFData)
 
 -- | a Ciphertext is a list of Word8
 newtype Ciphertext = Ciphertext [Word8]

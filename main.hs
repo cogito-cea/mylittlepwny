@@ -2,10 +2,12 @@
 
 module Main where
 
+import           Criterion.Main
+import           System.Random
+
 import           Aes.Hypothesis
 import           AesImport
 import           AesReference
-import           Criterion.Main
 import           Masking
 
 import           Aes.QuickCheck
@@ -17,6 +19,7 @@ main = do
   -- computeFirstSBOX thekey thetext
   -- compute_100000_CPA_hypothesis
 
+
 benchRandom :: Int -> [Plaintext]
 benchRandom n = take n $ randoms (mkStdGen 0)
 
@@ -26,12 +29,14 @@ benchQuickCheck n = take n <$> generate infiniteList
 criterionRandom :: IO ()
 criterionRandom = defaultMain
   [ bgroup "random"
-    [ bench "1000" $ whnf benchRandom 1000
-    , bench "100000" $ whnf benchRandom 100000
+    [ bench "1000"    $ nf benchRandom 1000
+    , bench "10000"   $ nf benchRandom 10000
+    , bench "100000"  $ nf benchRandom 100000
     ]
   , bgroup "quickcheck"
-    [ bench "1000" $ whnf benchQuickCheck 1000
-    , bench "100000" $ whnf benchQuickCheck 100000
+    [ bench "1000"    $ nfIO $ benchQuickCheck 1000
+    , bench "10000"   $ nfIO $ benchQuickCheck 10000
+    , bench "100000"  $ nfIO $ benchQuickCheck 100000
     ]
   ]
 
