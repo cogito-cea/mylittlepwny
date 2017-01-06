@@ -15,6 +15,8 @@ import qualified System.Random                      as R
    data types
  ----------------------------------------------------}
 
+-- | a 'Plaintext' is a list of 'Word8' values, most significant byte
+--   first in the list.
 newtype Plaintext = Plaintext [Word8]
   deriving (Eq, Show)
 
@@ -28,23 +30,26 @@ instance R.Random Plaintext where
   random = random
   randomR = randomR
 
--- | a Ciphertext is a list of Word8
+-- | a Ciphertext is a list of Word8, most significant byte first.
 newtype Ciphertext = Ciphertext [Word8]
   deriving (Eq, Show)
 
 cipherToHex :: Ciphertext -> [ByteString]
 cipherToHex (Ciphertext cs) = map (toLazyByteString . word8Hex) cs
 
-data State = State {
-                state0   :: Word32,
-                state1   :: Word32,
-                state2   :: Word32,
-                state3   :: Word32,
-                schedule :: KeySchedule }
-    deriving (Eq, Show)
+-- | The "most significant" word32 value is 'state0'
+data State = State
+             { state0   :: Word32
+             , state1   :: Word32
+             , state2   :: Word32
+             , state3   :: Word32
+             , schedule :: KeySchedule
+             } deriving (Eq, Show)
 
-data Key = Key128 RawKey | Key192 RawKey | Key256 RawKey
-  deriving (Show)
+data Key = Key128 RawKey
+         | Key192 RawKey
+         | Key256 RawKey
+         deriving (Show)
 
 newtype RawKey = RawKey [Word32]
   deriving (Show)

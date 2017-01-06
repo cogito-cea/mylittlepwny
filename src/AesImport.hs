@@ -13,8 +13,7 @@ module AesImport
   , importTexts
   ) where
 
-import           Data.Char (isSpace)
-import           Data.List (dropWhileEnd)
+import           Data.List (foldl')
 import           Data.Word
 
 import           Aes.Types
@@ -22,7 +21,8 @@ import           Aes.Types
 -- | a generic data structure to handle import and export.
 data AesText = AesText
   Int     -- ^ the size of the plaintext, in number of bytes
-  [Word8] -- ^ the plaintext bytes
+  [Word8] -- ^ the plaintext bytes; the most significant byte is
+          --   stored first in the list.
   deriving (Show)
 
 type Byte = Int
@@ -50,12 +50,11 @@ class HasAesText a where
   exportString = fromAesText . toAesText
 
 instance HasAesText String where
-  toAesText xs = foldr step mempty (words xs)
+  toAesText xs = foldl' step mempty (words xs)
     where
-      step :: String -> AesText -> AesText
-      step t = mappend (AesText 1 [read t])
-  fromAesText (AesText _ ts) = dropWhileEnd isSpace $ foldr step "" ts
-    where step w x = show w ++ " " ++ x
+      step :: AesText -> String ->  AesText
+      step x t = mappend (AesText 1 [read t]) x
+  fromAesText (AesText _ ts) = unwords $ map show $ reverse ts
 
 instance HasAesText Key where
   toAesText = undefined
@@ -80,7 +79,7 @@ instance HasAesText State where
   -- To avoid this, one would need to define two separate typeclasses
   -- for import and export.  'State' would only be an instance of the
   -- export class.
-  fromAesText = undefined
+  fromAesText = error "Cannot import a State value.  The keySchedule function is unknown."
 
 -- | file import, with Strings.
 importTexts :: HasAesText a =>

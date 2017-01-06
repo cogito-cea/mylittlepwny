@@ -49,12 +49,12 @@ unitTests = testGroup "Unit tests: excerpt from the NIST test suite"
   ]
   where
     t :: Plaintext
-    t = stringImport "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255"
+    t = stringImport "255 238 221 204 187 170 153 136 119 102 85 68 51 34 17 0"
 
     k :: Key
-    k = stringImport "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"
+    k = stringImport "15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00"
     c :: Ciphertext
-    c = stringImport "105 196 224 216 106 123 4 48 216 205 183 128 112 180 197 90"
+    c = stringImport "90 197 180 112 128 183 205 216 48 4 123 106 216 224 196 105"
 
     m = PreSubBytesMask $ Mask8 0x13
     m' = PostSubBytesMask $ Mask8 0x7A
