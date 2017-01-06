@@ -5,14 +5,14 @@
 {-# LANGUAGE UndecidableInstances  #-}
 
 import           Test.SmallCheck.Series
-import           Test.SmallCheck.Series.Instances
+import           Test.SmallCheck.Series.Instances ()
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.SmallCheck
 
-import           Data.Bits
+import           Data.Bits                        (shiftL, shiftR, xor, (.&.))
 import           Data.Word
-import           GHC.Generics
+import           GHC.Generics                     ()
 
 import           AesImport
 import           AesReference
@@ -39,8 +39,10 @@ tests :: TestTree
 tests = testGroup "Tests" [ unitTests
                           , aesProperties
                           , ieProperties
+                          , bitProperties
                           ]
 
+unitTests :: TestTree
 unitTests = testGroup "Unit tests: excerpt from the NIST test suite"
   [ testCase "reference AES, ECB mode, 128bit key" $
     aesBlockEncrypt k t @?= c
@@ -80,4 +82,36 @@ ieProperties = testGroup "Properties: import and export functions"
   [ testProperty "identity of importTexts . exportTexts" $
     forAll $ \t ->
       stringImport (exportString t) == (t :: Plaintext)
+  ]
+
+bitProperties :: TestTree
+bitProperties = testGroup "Properties: Aes.Bits'"
+  [
+    -- Plaintext values.  Cannot test bit values above 7 because
+    -- currently Plaintext uses a list of Word8 of variable length.
+    -- For small values of x, the list of Word8 values may contain
+    -- only one element.
+    testProperty "Plaintext: function 'bit', b = 0" $
+    forAll $ \x ->
+      let t = stringImport (show x) :: Plaintext
+      in  x `shiftR` 0 .&. 0x1 == bit 0 t
+  , testProperty "Plaintext: function 'bit', b = 1" $
+    forAll $ \x ->
+      let t = stringImport (show x) :: Plaintext
+      in  x `shiftR` 1 .&. 0x1 == bit 1 t
+  , testProperty "Plaintext: function 'bit', b = 7" $
+    forAll $ \x ->
+      let t = stringImport (show x) :: Plaintext
+      in  x `shiftR` 7 .&. 0x1 == bit 7 t
+  -- Plaintext values.  Make sure that the list of Word8 values in
+  -- Plaintext has at least two elements.
+  --
+  -- TODO how to add conditions on the value of x? (e.g. x > 0, x > 7)
+  , testProperty "Plaintext: function 'bit', b = 7" $
+    forAll $ \x ->
+      let x' = (abs x) `shiftL` 8 + 1
+          t = stringImport (show x') :: Plaintext
+      in  x' `shiftR` 7 .&. 0x1 == bit 7 t
+
+  -- State. stringImport cannot import a state value.
   ]
