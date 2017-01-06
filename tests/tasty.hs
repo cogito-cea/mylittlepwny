@@ -14,8 +14,8 @@ import           Data.Bits                        (shiftL, shiftR, xor, (.&.))
 import           Data.Word
 import           GHC.Generics                     ()
 
+import           Aes
 import           AesImport
-import           AesReference
 import           Masking
 
 import           Aes.Types

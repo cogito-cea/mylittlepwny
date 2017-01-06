@@ -1,13 +1,13 @@
 module Aes.Hypothesis
   where
 
-import           Data.Bits    (popCount)
-import           Data.Word    (Word8)
+import           Data.Bits (popCount)
+import           Data.Word (Word8)
 
+import           Aes
 import           Aes.Types
 import           Aes.Util
 import           AesImport
-import           AesReference
 
 -- | Generate a full set of (256) AES key hypothesis on byte number 'Byte'.
 --   All the other byte values are set to zero.

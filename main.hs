@@ -2,10 +2,11 @@
 
 module Main where
 
+import           Data.List      (partition)
+
+import           Aes
 import           Aes.Hypothesis
-import           Aes.Plaintext
 import           AesImport
-import           AesReference
 import           Masking
 
 

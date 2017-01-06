@@ -20,14 +20,15 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     AesReference
+  exposed-modules:     Aes
                      , AesImport
                      , Masking
                      , Aes.Hypothesis
-                     , Aes.Plaintext
   other-modules:       Aes.Reference
                      , Aes.Types
                      , Aes.Util
+                     , Aes.Random
+                     , Aes.Bits
   build-depends:       base >=4.8 && <4.9
                      , array >=0.5 && <0.6
                      , bytestring
