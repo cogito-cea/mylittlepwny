@@ -9,7 +9,7 @@ import           Data.ByteString.Lazy.Builder       (toLazyByteString)
 import           Data.ByteString.Lazy.Builder.ASCII (word8Hex)
 import           Data.List
 import           Data.Word
-import qualified System.Random as R
+import qualified System.Random                      as R
 
 {----------------------------------------------------
    data types
@@ -20,7 +20,7 @@ newtype Plaintext = Plaintext [Word8]
 
 -- |
 -- Define 'Plaintext' as an instance of 'Random'.
--- 
+--
 -- The current implementation does not considers 'Plaintext' as a
 -- sequentially ordered type.  For more information read the doc info of
 -- 'randomR'
