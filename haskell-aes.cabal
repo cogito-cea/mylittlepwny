@@ -24,6 +24,7 @@ library
                      , AesImport
                      , Masking
                      , Aes.Hypothesis
+                     , Aes.Plaintext
   other-modules:       Aes.Reference
                      , Aes.Types
   build-depends:       base >=4.8 && <4.9

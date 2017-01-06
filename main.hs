@@ -3,6 +3,7 @@
 module Main where
 
 import           Aes.Hypothesis
+import           Aes.Plaintext
 import           AesImport
 import           AesReference
 import           Masking

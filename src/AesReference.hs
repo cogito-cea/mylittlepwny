@@ -16,5 +16,6 @@ module AesReference
   , addRoundKey
   , ) where
 
+import           Aes.Plaintext
 import           Aes.Reference
 import           Aes.Types
