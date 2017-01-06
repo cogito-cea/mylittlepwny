@@ -27,6 +27,7 @@ library
                      , Aes.Plaintext
   other-modules:       Aes.Reference
                      , Aes.Types
+                     , Aes.Util
   build-depends:       base >=4.8 && <4.9
                      , array >=0.5 && <0.6
                      , bytestring

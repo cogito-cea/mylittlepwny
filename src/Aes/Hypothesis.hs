@@ -5,6 +5,7 @@ import           Data.Bits    (popCount)
 import           Data.Word    (Word8)
 
 import           Aes.Types
+import           Aes.Util
 import           AesImport
 import           AesReference
 

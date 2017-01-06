@@ -6,9 +6,8 @@ import           Data.Word
 
 import           Aes.Reference
 import           Aes.Types
+import           Aes.Util
 
-
-(°) = flip (.)
 
 -- TODO
 -- faire la séparation entre le schéma de masquage en général, et
