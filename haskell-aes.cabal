@@ -45,6 +45,7 @@ executable aes-test
   build-depends:       base >=4.8 && <4.9
                      , bytestring
                      , haskell-aes
+                     , random
   if !flag(debug)
     ghc-options:    -Wall -threaded -O2
   else
@@ -71,6 +72,7 @@ test-suite tasty
   build-depends:    haskell-aes
                   , base >= 4 && < 5
                   , containers
+                  , random
                   , smallcheck == 1.1.*
                   , smallcheck-series
                   , tasty >= 0.8
