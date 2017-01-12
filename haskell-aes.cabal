@@ -41,10 +41,7 @@ library
     ghc-options:    -Wall -threaded
 
 executable aes-test
-  -- .hs or .lhs file containing the Main module.
   main-is:             main.hs
-
-  -- Other library packages from which modules are imported.
   build-depends:       base >=4.8 && <4.9
                      , bytestring
                      , haskell-aes
@@ -53,8 +50,20 @@ executable aes-test
     ghc-options:    -Wall -threaded -O2
   else
     ghc-options:    -Wall -threaded
+  hs-source-dirs:      .
 
-  -- Directories containing source files.
+executable cpa-hyps
+  main-is:             cpa-hyps.hs
+  build-depends:       base >=4.8 && <4.9
+                     , bytestring
+                     , haskell-aes
+                     , filepath
+                     , random
+                     , optparse-applicative
+  if !flag(debug)
+    ghc-options:    -Wall -threaded -O2
+  else
+    ghc-options:    -Wall -threaded
   hs-source-dirs:      .
 
   -- Base language which the package is written in.
