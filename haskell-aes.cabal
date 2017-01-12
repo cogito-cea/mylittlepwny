@@ -23,6 +23,7 @@ library
   exposed-modules:     Aes
                      , AesImport
                      , Masking
+                     , TTest
                      , Aes.Hypothesis
   other-modules:       Aes.Reference
                      , Aes.Types
