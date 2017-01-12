@@ -3,7 +3,7 @@
 module Main where
 
 import           Options.Applicative
-import System.FilePath (dropExtension, takeExtension)
+import           System.FilePath     (dropExtension, takeExtension)
 
 import           Aes.Hypothesis
 import           AesImport
