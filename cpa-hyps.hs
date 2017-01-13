@@ -36,7 +36,11 @@ main = do
 
   -- the real program entry point
   case progCommand opts of
-    FirstSBOX   -> putStrLn "FirstSBOX. TODO"
+    FirstSBOX   -> do
+      putStrLn "** CPA.  compute a random sequence of n plaintexts **"
+      let Size n = size opts
+      ts <- take n <$> randomPlaintexts
+      exportTexts (output opts) ts
 
     TTestFR ff fr -> do
       putStrLn "** t-test. specific fixed vs. random **"
