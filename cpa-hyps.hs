@@ -164,7 +164,7 @@ main = do
                   <*> strOption
                   ( long "population1"
                     <> short '1'
-                    <> value "population0.txt"
+                    <> value "population1.txt"
                     <> showDefault
                     <> help "name of the output file containing the plaintext values for population 1"
                   )
