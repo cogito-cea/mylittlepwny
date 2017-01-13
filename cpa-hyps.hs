@@ -19,7 +19,10 @@ newtype Seed = Seed Int
 newtype Size = Size Int
 
 data Command
-  = FirstSBOX
+  = FirstSBOX { plaintexts :: !FilePath
+              , byte :: !Int
+              -- TODO - model: HW | HD
+              }
   | TTestFR { fixed  :: !FilePath
             , random :: !FilePath
             }
@@ -36,11 +39,10 @@ main = do
 
   -- the real program entry point
   case progCommand opts of
-    FirstSBOX   -> do
-      putStrLn "** CPA.  compute a random sequence of n plaintexts **"
-      let Size n = size opts
-      ts <- take n <$> randomPlaintexts
-      exportTexts (output opts) ts
+    FirstSBOX f b -> do
+      putStrLn "** CPA. compute the hypothetical values after the first SBOX computation **"
+      texts <- importTexts f
+      exportHypothesis (output opts) $ hammingWeight $ firstRoundSBOX b texts
 
     TTestFR ff fr -> do
       putStrLn "** t-test. specific fixed vs. random **"
@@ -119,62 +121,71 @@ main = do
       <*> hsubparser (firstSboxCommand <> tTestFR <> tTestRR)
 
     firstSboxCommand = command "firstsbox"
-                       ( info firstSboxOptions
-                         ( progDesc "Compute hypothesis values for the first SBOX.")
+                       $ info firstSboxOptions
+                       $ progDesc "Compute hypothesis values for the first SBOX."
+
+    firstSboxOptions = FirstSBOX
+                       <$> strOption
+                       ( long "plaintexts"
+                         <> short 'p'
+                         <> help "Name of the input file containing the plaintext values"
                        )
-    firstSboxOptions = pure FirstSBOX
+                       <*> option auto
+                       ( long "byte"
+                         <> short 'b'
+                         <> help "Byte number in [0..15] used to compute CPA correlation hypothesis"
+                         <> value 0
+                         <> showDefault
+                       )
 
     tTestFR = command "ttest-fr"
-              ( info
-                ( TTestFR
-                  <$> strOption
-                  ( long "fixed"
-                    <> short '0'
-                    <> value "fixed.txt"
-                    <> showDefault
-                    <> help "name of the output file containing the fixed plaintext values"
-                  )
-                  <*> strOption
-                  ( long "random"
-                    <> short '1'
-                    <> value "randoms.txt"
-                    <> showDefault
-                    <> help "name of the output file containing the random plaintext values"
-                  )
-                )
-                ( progDesc $ unlines
-                  [ "Compute two populations of plaintexts for the specific fixed vs. random t-test, for the output of the first SBOX."
-                  , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
-                  ]
-                )
-              )
+              $ info tTestFROptions
+              $ progDesc $ unlines
+              [ "Compute two populations of plaintexts for the specific fixed vs. random t-test, for the output of the first SBOX."
+              , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
+              ]
+
+    tTestFROptions = TTestFR
+                     <$> strOption
+                     ( long "fixed"
+                       <> short '0'
+                       <> value "fixed.txt"
+                       <> showDefault
+                       <> help "name of the output file containing the fixed plaintext values"
+                     )
+                     <*> strOption
+                     ( long "random"
+                       <> short '1'
+                       <> value "randoms.txt"
+                       <> showDefault
+                       <> help "name of the output file containing the random plaintext values"
+                     )
+
 
     tTestRR = command "ttest-rr"
-              ( info
-                ( TTestRR
-                  <$> ttestKey
-                  <*> ttestBit
-                  <*> strOption
-                  ( long "population0"
-                    <> short '0'
-                    <> value "population0.txt"
-                    <> showDefault
-                    <> help "name of the output file containing the plaintext values for population 0"
-                  )
-                  <*> strOption
-                  ( long "population1"
-                    <> short '1'
-                    <> value "population1.txt"
-                    <> showDefault
-                    <> help "name of the output file containing the plaintext values for population 1"
-                  )
-                )
-                ( progDesc $ unlines
-                  [ "Compute two populations of plaintexts for the specific random vs. random t-test, for the output of the first SBOX."
-                  , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
-                  ]
-                )
-              )
+              $ info tTestRROptions
+              $ progDesc $ unlines
+              [ "Compute two populations of plaintexts for the specific random vs. random t-test, for the output of the first SBOX."
+              , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
+              ]
+
+    tTestRROptions = TTestRR
+                     <$> ttestKey
+                     <*> ttestBit
+                     <*> strOption
+                     ( long "population0"
+                       <> short '0'
+                       <> value "population0.txt"
+                       <> showDefault
+                       <> help "name of the output file containing the plaintext values for population 0"
+                     )
+                     <*> strOption
+                     ( long "population1"
+                       <> short '1'
+                       <> value "population1.txt"
+                       <> showDefault
+                       <> help "name of the output file containing the plaintext values for population 1"
+                     )
 
     ttestKey = strOption
                ( long "key"
@@ -191,8 +202,3 @@ main = do
                  <> showDefault
                )
 
-compute100000CPAHypothesis :: IO ()
-compute100000CPAHypothesis = do
-  texts <- importTexts "plaintexts.txt"
-  let hyps = hammingWeight $ firstRoundSBOX 0 texts
-  exportHypothesis "test.txt" hyps
