@@ -15,11 +15,13 @@ data Opts = Opts
   , seed        :: !Seed
   , progCommand :: !Command
   }
+-- TODO tenir compte de la graine
 newtype Seed = Seed Int
 newtype Size = Size Int
 
 data Command
-  = FirstSBOX { plaintexts :: !FilePath
+  = RandomPlaintexts
+  | FirstSBOX { plaintexts :: !FilePath
               , byte :: !Int
               -- TODO - model: HW | HD
               }
@@ -39,6 +41,12 @@ main = do
 
   -- the real program entry point
   case progCommand opts of
+    RandomPlaintexts -> do
+      putStrLn "** Generate random plaintexts **"
+      let Size n = size opts
+      ts <- take n <$> randomPlaintexts
+      exportTexts (output opts) ts
+
     FirstSBOX f b -> do
       putStrLn "** CPA. compute the hypothetical values after the first SBOX computation **"
       texts <- importTexts f
@@ -118,7 +126,16 @@ main = do
               <> showDefault
             )
           )
-      <*> hsubparser (firstSboxCommand <> tTestFR <> tTestRR)
+      <*> hsubparser ( randomPT
+                       <> firstSboxCommand
+                       <> tTestFR
+                       <> tTestRR
+                     )
+    randomPT = command "plaintexts"
+               $ info randomPTOptions
+               $ progDesc "Generate a list of random plaintexts"
+
+    randomPTOptions = pure RandomPlaintexts
 
     firstSboxCommand = command "firstsbox"
                        $ info firstSboxOptions
