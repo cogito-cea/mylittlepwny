@@ -20,13 +20,13 @@ newtype Size = Size Int
 
 data Command
   = FirstSBOX
-  | TTestFR { fixed  :: FilePath
-            , random :: FilePath
+  | TTestFR { fixed  :: !FilePath
+            , random :: !FilePath
             }
-  | TTestRR { keyFile :: FilePath
-            , bitnb   :: BitNumber
-            , pop0    :: FilePath
-            , pop1    :: FilePath
+  | TTestRR { keyFile :: !FilePath
+            , bitnb   :: !BitNumber
+            , pop0    :: !FilePath
+            , pop1    :: !FilePath
             }
 
 main :: IO ()
