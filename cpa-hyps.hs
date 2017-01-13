@@ -51,13 +51,18 @@ main = do
       putStrLn "** t-test. specific random vs. random **"
 
       -- read the key file
-      -- TODO quid si le fichier est vide ?
-      -- TODO quid si le fichier comporte plus d'une clé ?
-      key <- head <$> importTexts kfile
+      keys <- importTexts kfile
+      key <- case keys of
+        []   -> error $ "Error. " <> kfile <> " does not contain a valid AES key value."
+        k:[] -> return k
+        k:_  -> do
+          putStrLn "Warning.  More than one key found in the key file.  Proceeding with the first key value."
+          return k
 
+      -- compute the two populations of plaintexts
       pops <- ttestRR firstSBOX key b
+
       let n = size opts
-      print n
       exportTexts p0 (take n $ fst pops)
       exportTexts p1 (take n $ snd pops)
 
