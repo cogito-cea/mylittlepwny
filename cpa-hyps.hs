@@ -23,6 +23,8 @@ data Command
             }
   | TTestRR { keyFile :: FilePath
             , bitnb   :: BitNumber
+            , pop0    :: FilePath
+            , pop1    :: FilePath
             }
 
 main :: IO ()
@@ -39,10 +41,8 @@ main = do
     TTestRR kfile b -> do
       putStrLn "** t-test. specific random vs. random **"
 
-      -- names of the output files
-      let o = output opts
-      let o0 = dropExtension o <> "_0" <> takeExtension o
-      let o1 = dropExtension o <> "_1" <> takeExtension o
+    TTestRR kfile b p0 p1 -> do
+      putStrLn "** t-test. specific random vs. random **"
 
       -- read the key file
       -- TODO quid si le fichier est vide ?
@@ -52,8 +52,8 @@ main = do
       pops <- ttestRR firstSBOX key b
       let n = size opts
       print n
-      exportTexts o0 (take n $ fst pops)
-      exportTexts o1 (take n $ snd pops)
+      exportTexts p0 (take n $ fst pops)
+      exportTexts p1 (take n $ snd pops)
 
   putStrLn "** End of processing **"
 
@@ -114,7 +114,25 @@ main = do
               )
 
     tTestRR = command "ttest-rr"
-              ( info ( ttestOptions TTestRR )
+              ( info
+                ( TTestRR
+                  <$> ttestKey
+                  <*> ttestBit
+                  <*> strOption
+                  ( long "population0"
+                    <> short '0'
+                    <> value "population0.txt"
+                    <> showDefault
+                    <> help "name of the output file containing the plaintext values for population 0"
+                  )
+                  <*> strOption
+                  ( long "population1"
+                    <> short '1'
+                    <> value "population0.txt"
+                    <> showDefault
+                    <> help "name of the output file containing the plaintext values for population 1"
+                  )
+                )
                 ( progDesc $ unlines
                   [ "Compute two populations of plaintexts for the specific random vs. random t-test, for the output of the first SBOX."
                   , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
@@ -122,21 +140,20 @@ main = do
                 )
               )
 
-    ttestOptions :: (FilePath -> BitNumber -> Command) -> Parser Command
-    ttestOptions f = f <$> strOption
-                     ( long "key"
-                       <> short 'k'
-                       <> metavar "KEYFILE"
-                       <> help "the input key file"
-                     )
-                     <*> option auto
-                     ( long "bit-number"
-                       <> short 'b'
-                       <> metavar "BIT_NUMBER"
-                       <> help "number of the state bit observed"
-                       <> value 0
-                       <> showDefault
-                     )
+    ttestKey = strOption
+               ( long "key"
+                 <> short 'k'
+                 <> metavar "KEYFILE"
+                 <> help "the input key file"
+               )
+    ttestBit = option auto
+               ( long "bit-number"
+                 <> short 'b'
+                 <> metavar "BIT_NUMBER"
+                 <> help "number of the state bit observed"
+                 <> value 0
+                 <> showDefault
+               )
 
 compute100000CPAHypothesis :: IO ()
 compute100000CPAHypothesis = do
