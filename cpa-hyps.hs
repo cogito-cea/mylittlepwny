@@ -11,10 +11,12 @@ import           TTest
 
 data Opts = Opts
   { output      :: !FilePath
-  , size        :: !Int
-  , seed        :: !Int
+  , size        :: !Size
+  , seed        :: !Seed
   , progCommand :: !Command
   }
+newtype Seed = Seed Int
+newtype Size = Size Int
 
 data Command
   = FirstSBOX
@@ -31,6 +33,7 @@ main :: IO ()
 main = do
   -- parse program commands and options
   opts <- execParser optsParser
+
   -- the real program entry point
   case progCommand opts of
     FirstSBOX   -> putStrLn "FirstSBOX. TODO"
@@ -41,7 +44,7 @@ main = do
       let fixedtext :: Plaintext
           -- fixed value proposed by Goodwill et al., 2011
           fixedtext = stringImport "0x90 0x18 0x60 0x95 0xef 0xbf 0x55 0x32 0x0d 0x4b 0x6b 0x5e 0xee 0xa3 0x39 0xda"
-          n = size opts
+          Size n = size opts
           txtf = take n $ repeat $ fixedtext
       txtr <- take n <$> randomPlaintexts
       exportTexts ff txtf
@@ -62,7 +65,7 @@ main = do
       -- compute the two populations of plaintexts
       pops <- ttestRR firstSBOX key b
 
-      let n = size opts
+      let Size n = size opts
       exportTexts p0 (take n $ fst pops)
       exportTexts p1 (take n $ snd pops)
 
@@ -91,21 +94,23 @@ main = do
             <> value "output.txt"
             <> showDefault
           )
-      <*> option auto
-          ( long "nb"
-            <> short 'n'
-            <> metavar "NUMBER"
-            <> help "Size of the set of plaintexts generated"
-            <> value 1024
-            <> showDefault
+      <*> ( Size <$> option auto
+            ( long "nb"
+              <> short 'n'
+              <> metavar "NUMBER"
+              <> help "Size of the set of plaintexts generated"
+              <> value 1024
+              <> showDefault
+            )
           )
-      <*> option auto
-          ( long "seed"
-            <> short 'x'
-            <> metavar "SEED_VALUE"
-            <> help "Seed of the random number generator"
-            <> value 0
-            <> showDefault
+      <*> ( Seed <$> option auto
+            ( long "seed"
+              <> short 'x'
+              <> metavar "SEED_VALUE"
+              <> help "Seed of the random number generator"
+              <> value 0
+              <> showDefault
+            )
           )
       <*> hsubparser (firstSboxCommand <> tTestFR <> tTestRR)
 
