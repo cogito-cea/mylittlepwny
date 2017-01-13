@@ -3,8 +3,8 @@
 module Main where
 
 import           Options.Applicative
-import           System.FilePath     (dropExtension, takeExtension)
 
+import           Aes
 import           Aes.Hypothesis
 import           AesImport
 import           TTest
@@ -18,8 +18,8 @@ data Opts = Opts
 
 data Command
   = FirstSBOX
-  | TTestFR { keyFile :: FilePath
-            , bitnb   :: BitNumber
+  | TTestFR { fixed  :: FilePath
+            , random :: FilePath
             }
   | TTestRR { keyFile :: FilePath
             , bitnb   :: BitNumber
@@ -35,11 +35,17 @@ main = do
   case progCommand opts of
     FirstSBOX   -> putStrLn "FirstSBOX. TODO"
 
-    TTestFR kfile b -> do
-      putStrLn "TTestFR. TODO"
+    TTestFR ff fr -> do
+      putStrLn "** t-test. specific fixed vs. random **"
 
-    TTestRR kfile b -> do
-      putStrLn "** t-test. specific random vs. random **"
+      let fixedtext :: Plaintext
+          -- fixed value proposed by Goodwill et al., 2011
+          fixedtext = stringImport "0x90 0x18 0x60 0x95 0xef 0xbf 0x55 0x32 0x0d 0x4b 0x6b 0x5e 0xee 0xa3 0x39 0xda"
+          n = size opts
+          txtf = take n $ repeat $ fixedtext
+      txtr <- take n <$> randomPlaintexts
+      exportTexts ff txtf
+      exportTexts fr txtr
 
     TTestRR kfile b p0 p1 -> do
       putStrLn "** t-test. specific random vs. random **"
@@ -105,7 +111,23 @@ main = do
     firstSboxOptions = pure FirstSBOX
 
     tTestFR = command "ttest-fr"
-              ( info ( ttestOptions TTestFR )
+              ( info
+                ( TTestFR
+                  <$> strOption
+                  ( long "fixed"
+                    <> short '0'
+                    <> value "fixed.txt"
+                    <> showDefault
+                    <> help "name of the output file containing the fixed plaintext values"
+                  )
+                  <*> strOption
+                  ( long "random"
+                    <> short '1'
+                    <> value "randoms.txt"
+                    <> showDefault
+                    <> help "name of the output file containing the random plaintext values"
+                  )
+                )
                 ( progDesc $ unlines
                   [ "Compute two populations of plaintexts for the specific fixed vs. random t-test, for the output of the first SBOX."
                   , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
