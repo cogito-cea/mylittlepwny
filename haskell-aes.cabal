@@ -40,18 +40,6 @@ library
   else
     ghc-options:    -Wall -threaded
 
-executable aes-test
-  main-is:             main.hs
-  build-depends:       base >=4.8 && <4.9
-                     , bytestring
-                     , haskell-aes
-                     , random
-  if !flag(debug)
-    ghc-options:    -Wall -threaded -O2
-  else
-    ghc-options:    -Wall -threaded
-  hs-source-dirs:      .
-
 executable cpa-hyps
   main-is:             cpa-hyps.hs
   build-depends:       base >=4.8 && <4.9

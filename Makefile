@@ -4,7 +4,7 @@ build:
 
 .PHONY: run
 run: build
-	stack exec aes-test
+	stack exec cpa-hyps -- --help
 
 .PHONY: test
 test:
