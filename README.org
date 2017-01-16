@@ -23,7 +23,7 @@ evaluations, etc.
 make build
 #+END_SRC
 
-** install
+** install and/or update
 
 #+BEGIN_SRC sh
 $ make install
@@ -31,6 +31,9 @@ $ make install
 
 … will copy the executable =cpa-hyps= in =$HOME/.local/bin=.  You
 then need to add this directory in your =PATH= variable.
+
+You can also use =make install= to install a new version of =cpa-hyps=
+in =$HOME/.local/bin=.
 
 ** =cpa-hyps=
 
