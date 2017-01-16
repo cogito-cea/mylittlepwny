@@ -1,15 +1,10 @@
 module TTest
   where
 
-import           Data.Function  (on)
-import           Data.List      (partition)
+import           Data.Function (on)
+import           Data.List     (partition)
 
 import           Aes
-import           Aes.Hypothesis
-
-
-type BitNumber = Int
-
 
 -- | Compute two streams of plaintexts for the random vs. random specific t-test.
 --  @key@ is the known key value,

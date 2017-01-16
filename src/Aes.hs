@@ -22,6 +22,7 @@ module Aes
 
   -- * module Aes.Bits
   , bit
+  , BitNumber, bitNumber, number
   ) where
 
 import           Aes.Bits

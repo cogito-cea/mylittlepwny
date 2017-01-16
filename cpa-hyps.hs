@@ -22,7 +22,7 @@ newtype Size = Size Int
 data Command
   = RandomPlaintexts
   | FirstSBOX { plaintexts :: !FilePath
-              , byte :: !Int
+              , byte       :: !Int
               -- TODO - model: HW | HD
               }
   | TTestFR { fixed  :: !FilePath
@@ -210,7 +210,7 @@ main = do
                  <> metavar "KEYFILE"
                  <> help "the input key file"
                )
-    ttestBit = option auto
+    ttestBit = bitNumber <$> option auto
                ( long "bit-number"
                  <> short 'b'
                  <> metavar "BIT_NUMBER"

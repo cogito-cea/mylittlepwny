@@ -32,6 +32,10 @@ instance Monad m => Serial m MixColumnMask where
 instance Monad m => Serial m Plaintext where
   series = newtypeCons Plaintext
 
+instance Monad m => Serial m BitNumber where
+  -- we are interested in integer bit-values up to 256 elements, for AES-256.
+  series = generate (\_ -> bitNumber <$> [0..256])
+
 main :: IO ()
 main = defaultMain tests
 
@@ -85,33 +89,13 @@ ieProperties = testGroup "Properties: import and export functions"
   ]
 
 bitProperties :: TestTree
-bitProperties = testGroup "Properties: Aes.Bits'"
+bitProperties = testGroup "Properties: Aes.Bits"
   [
-    -- Plaintext values.  Cannot test bit values above 7 because
-    -- currently Plaintext uses a list of Word8 of variable length.
-    -- For small values of x, the list of Word8 values may contain
-    -- only one element.
-    testProperty "Plaintext: function 'bit', b = 0" $
-    forAll $ \x ->
-      let t = stringImport (show x) :: Plaintext
-      in  x `shiftR` 0 .&. 0x1 == bit 0 t
-  , testProperty "Plaintext: function 'bit', b = 1" $
-    forAll $ \x ->
-      let t = stringImport (show x) :: Plaintext
-      in  x `shiftR` 1 .&. 0x1 == bit 1 t
-  , testProperty "Plaintext: function 'bit', b = 7" $
-    forAll $ \x ->
-      let t = stringImport (show x) :: Plaintext
-      in  x `shiftR` 7 .&. 0x1 == bit 7 t
-  -- Plaintext values.  Make sure that the list of Word8 values in
-  -- Plaintext has at least two elements.
-  --
-  -- TODO how to add conditions on the value of x? (e.g. x > 0, x > 7)
-  , testProperty "Plaintext: function 'bit', b = 7" $
-    forAll $ \x ->
-      let x' = (abs x) `shiftL` 8 + 1
-          t = stringImport (show x') :: Plaintext
-      in  x' `shiftR` 7 .&. 0x1 == bit 7 t
+    testProperty "Plaintext: function 'bit'" $
+    forAll $ \x bitnb ->
+      let x' = getNonNegative x
+          t = stringImport (show x) :: Plaintext
+      in  x' `shiftR` (number bitnb) .&. 0x1 == bit bitnb t
 
   -- State. stringImport cannot import a state value.
   ]
