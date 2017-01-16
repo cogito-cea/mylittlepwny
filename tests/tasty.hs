@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -38,7 +37,7 @@ instance Monad m => Serial m Plaintext where
 instance Monad m => Serial m BitNumber where
   -- We are interested in integer bit-values up to 256 elements only
   -- (in the case of AES-256), no more.
-  -- 
+  --
   -- For negative values on 'n', the generate function will return [].
   series = generate $
            \n -> bitNumber <$> if n < 256 then [0..n] else [0..256]
