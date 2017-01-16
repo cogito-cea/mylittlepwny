@@ -33,8 +33,12 @@ instance Monad m => Serial m Plaintext where
   series = newtypeCons Plaintext
 
 instance Monad m => Serial m BitNumber where
-  -- we are interested in integer bit-values up to 256 elements, for AES-256.
-  series = generate (\_ -> bitNumber <$> [0..256])
+  -- We are interested in integer bit-values up to 256 elements only
+  -- (in the case of AES-256), no more.
+  -- 
+  -- For negative values on 'n', the generate function will return [].
+  series = generate $
+           \n -> bitNumber <$> if n < 256 then [0..n] else [0..256]
 
 main :: IO ()
 main = defaultMain tests
@@ -95,7 +99,7 @@ bitProperties = testGroup "Properties: Aes.Bits"
     forAll $ \x bitnb ->
       let x' = getNonNegative x
           t = stringImport (show x) :: Plaintext
-      in  x' `shiftR` (number bitnb) .&. 0x1 == bit bitnb t
+      in  x' `shiftR` number bitnb .&. 0x1 == bit bitnb t
 
   -- State. stringImport cannot import a state value.
   ]
