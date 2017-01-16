@@ -3,7 +3,13 @@ this implementation is to perform some fast prototyping on algorithms
 based on AES.
 
 The implementation of the =AesReference= module is based on the blog
-post [[http://unconceived.net/blog/2015/01/29/aes-reference-haskell.html][AES reference implementation in Haskell]], by Justin Handville.
+post [[http://unconceived.net/blog/2015/01/29/aes-reference-haskell.html][AES reference implementation in Haskell]], by Justin Handville.  It
+is located in the module =AES=, plus a few other things.
+
+The source code also contains a small program, =cpa-hyps=, designed to
+compute a few things for side channel attacks: input hypothesis for
+CPA correlation computation, sets of input plaintexts for t-test
+evaluations, etc.
 
 * required dependencies
 
@@ -17,11 +23,132 @@ post [[http://unconceived.net/blog/2015/01/29/aes-reference-haskell.html][AES re
 make build
 #+END_SRC
 
-** run
+** install
 
+#+BEGIN_SRC sh
+$ make install
+#+END_SRC
+
+… will copy the executable =cpa-hyps= in =$HOME/.local/bin=.  You
+then need to add this directory in your =PATH= variable.
+
+** =cpa-hyps=
+
+Overview of program options:
 #+BEGIN_SRC sh
 make run
 #+END_SRC
+
+*** general usage and global options
+
+Once you have run =make install=, option =--help= gives an overview of
+=cpa-hyps='s general usage and of the global options it supports.
+Currently:
+
+#+BEGIN_EXAMPLE
+$ cpa-hyps --help
+cpa-hyps: compute hypothesis values for CPA attacks on AES.
+
+Usage: cpa-hyps [-o|--output FILE] [-n|--nb NUMBER] [-x|--seed SEED_VALUE]
+                COMMAND
+  Compute hypothesis values at the output of the first SBOX. Outputs the results
+  in a text file. Use COMMAND --help to see the list of options supported by
+  each command.
+
+Available options:
+  -h,--help                Show this help text
+  -o,--output FILE         Name of the output file (default: "output.txt")
+  -n,--nb NUMBER           Size of the set of plaintexts
+                           generated (default: 1024)
+  -x,--seed SEED_VALUE     Seed of the random number generator (default: 0)
+
+Available commands:
+  plaintexts               Generate a list of random plaintexts
+  firstsbox                Compute hypothesis values for the first SBOX.
+  ttest-fr                 Compute two populations of plaintexts for the
+                           specific fixed vs. random t-test, for the output of
+                           the first SBOX. Generates two output files: FILE0.txt
+                           and FILE1.txt named after the contents of the
+                           --output option.
+  ttest-rr                 Compute two populations of plaintexts for the
+                           specific random vs. random t-test, for the output of
+                           the first SBOX. Generates two output files: FILE0.txt
+                           and FILE1.txt named after the contents of the
+                           --output option.
+#+END_EXAMPLE
+
+*** command =plaintexts=
+
+Use this command to generate a list of random plaintexts.  This
+command has no specific option.
+
+*** command =firstsbox=
+
+Use this command to generate the CPA correlation hypothesis at the
+output of the first SubBytes computation in AES.  Currently we use the
+Hamming Weight to compute the power model.
+
+#+BEGIN_EXAMPLE
+$ cpa-hyps firstsbox  --help
+Usage: cpa-hyps firstsbox (-p|--plaintexts ARG) [-b|--byte ARG]
+  Compute hypothesis values for the first SBOX.
+
+Available options:
+  -p,--plaintexts ARG      Name of the input file containing the plaintext
+                           values
+  -b,--byte ARG            Byte number in [0..15] used to compute CPA
+                           correlation hypothesis (default: 0)
+  -h,--help                Show this help text
+#+END_EXAMPLE
+
+******** TODO introduce the Hamming Distance model
+    :PROPERTIES:
+   :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+   :END:
+
+*** command =ttest-fr=
+
+Provides two input plaintext populations to perform a specific fixed vs. random
+t-test.
+
+#+BEGIN_EXAMPLE
+ cpa-hyps ttest-fr  --help
+Usage: cpa-hyps ttest-fr [-0|--fixed ARG] [-1|--random ARG]
+  Compute two populations of plaintexts for the specific fixed vs. random
+  t-test, for the output of the first SBOX. Generates two output files:
+  FILE0.txt and FILE1.txt named after the contents of the --output option.
+
+Available options:
+  -0,--fixed ARG           name of the output file containing the fixed
+                           plaintext values (default: "fixed.txt")
+  -1,--random ARG          name of the output file containing the random
+                           plaintext values (default: "randoms.txt")
+  -h,--help                Show this help text
+#+END_EXAMPLE
+
+*** command =ttest=rr=
+
+Provides two input plaintext populations to perform a specific random vs. random
+t-test.
+
+#+BEGIN_EXAMPLE
+$ cpa-hyps ttest-rr  --help
+Usage: cpa-hyps ttest-rr (-k|--key KEYFILE) [-b|--bit-number BIT_NUMBER]
+                         [-0|--population0 ARG] [-1|--population1 ARG]
+  Compute two populations of plaintexts for the specific random vs. random
+  t-test, for the output of the first SBOX. Generates two output files:
+  FILE0.txt and FILE1.txt named after the contents of the --output option.
+
+Available options:
+  -k,--key KEYFILE         the input key file
+  -b,--bit-number BIT_NUMBER
+                           number of the state bit observed (default: 0)
+  -0,--population0 ARG     name of the output file containing the plaintext
+                           values for population 0 (default: "population0.txt")
+  -1,--population1 ARG     name of the output file containing the plaintext
+                           values for population 1 (default: "population1.txt")
+  -h,--help                Show this help text
+#+END_EXAMPLE
 
 ** test
 
@@ -29,18 +156,9 @@ make run
 make test
 #+END_SRC
 
-* schéma de masquage Herbst et al., 2006
+* schéma de masquage - Herbst et al., 2006
 
-******** TODO application du masque =m= dans le key schedule
+******** TODO [#C] application du masque =m= dans le key schedule
     :PROPERTIES:
   :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
   :END:
-
-* refactoring sur les structures de données
-
-******** TODO code refactoring
-    :PROPERTIES:
-  :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
-  :END:
-
-******** INACTIVE mettre à jour les tests
