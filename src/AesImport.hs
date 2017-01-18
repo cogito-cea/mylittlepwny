@@ -53,7 +53,7 @@ instance HasAesText String where
   toAesText xs = foldl' step mempty (words xs)
     where
       step :: AesText -> String ->  AesText
-      step x t = mappend (AesText 1 [read t]) x
+      step x t = mappend x (AesText 1 [read t])
   fromAesText (AesText _ ts) = unwords $ map show $ reverse ts
 
 instance HasAesText Key where
@@ -62,11 +62,11 @@ instance HasAesText Key where
 
 instance HasAesText Plaintext where
   toAesText (Plaintext ts) = AesText (length ts) ts
-  fromAesText (AesText _ ts) = Plaintext ts
+  fromAesText (AesText _ ts) = Plaintext $ reverse ts
 
 instance HasAesText Ciphertext where
   toAesText (Ciphertext ts) = AesText (length ts) ts
-  fromAesText (AesText _ ts) = Ciphertext ts
+  fromAesText (AesText _ ts) = Ciphertext $ reverse ts
 
 instance HasAesText State where
   toAesText (State s0 s1 s2 s3 _) =
@@ -99,9 +99,9 @@ exportTexts f ts = Prelude.writeFile f $ unlines $ map exportString ts
 -- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
 -- TODO: key :: AesText -> Maybe Key
 key :: AesText -> Key
-key (AesText 16 bs) = Key128 $ RawKey $ tow32 bs
-key (AesText 24 bs) = Key192 $ RawKey $ tow32 bs
-key (AesText 32 bs) = Key256 $ RawKey $ tow32 bs
+key (AesText 16 bs) = Key128 $ RawKey $ tow32 $ reverse bs
+key (AesText 24 bs) = Key192 $ RawKey $ tow32 $ reverse bs
+key (AesText 32 bs) = Key256 $ RawKey $ tow32 $ reverse bs
 key (AesText n _)   = error $ "unknown key length: " ++ show n
 -- | Convert each group of 4 'Word8's to a 'Word32'.
 tow32 :: [Word8] -> [Word32]
