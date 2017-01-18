@@ -32,7 +32,7 @@ initState byte ts =
 
 -- | Compute the output of the first SBOX
 firstSBOX :: Key -> Plaintext -> State
-firstSBOX k t = (aesInit k t) $$ addRoundKey $$ subBytes
+firstSBOX k t = aesInit k t $$ addRoundKey $$ subBytes
 
 -- | Considering the key byte 'byte' attacked (see 'keyHypothesis'),
 --   compute the matrix of hypothetical values at the output of the
