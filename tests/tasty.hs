@@ -54,7 +54,7 @@ tests = testGroup "Tests" [ unitTests
                           ]
 
 unitTests :: TestTree
-unitTests = testGroup "Unit tests: excerpt from the NIST test suite"
+unitTests = testGroup "Unit tests: excerpt from the FIPS 197 test suite"
   [ testCase "reference AES, ECB mode, 128bit key" $
     aesBlockEncrypt k t @?= c
   , testCase "masked AES,    ECB mode, 128bit key" $
@@ -62,12 +62,13 @@ unitTests = testGroup "Unit tests: excerpt from the NIST test suite"
   ]
   where
     t :: Plaintext
-    t = stringImport "255 238 221 204 187 170 153 136 119 102 85 68 51 34 17 0"
+    t = stringImport "0xff 0xee 0xdd 0xcc 0xbb 0xaa 0x99 0x88 0x77 0x66 0x55 0x44 0x33 0x22 0x11 0x00"
 
     k :: Key
-    k = stringImport "15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00"
+    k = stringImport "0x0f 0x0e 0x0d 0x0c 0x0b 0x0a 0x09 0x08 0x07 0x06 0x05 0x04 0x03 0x02 0x01 0x00"
+
     c :: Ciphertext
-    c = stringImport "90 197 180 112 128 183 205 216 48 4 123 106 216 224 196 105"
+    c = stringImport "0x5a 0xc5 0xb4 0x70 0x80 0xb7 0xcd 0xd8 0x30 0x04 0x7b 0x6a 0xd8 0xe0 0xc4 0x69"
 
     m = PreSubBytesMask $ Mask8 0x13
     m' = PostSubBytesMask $ Mask8 0x7A
