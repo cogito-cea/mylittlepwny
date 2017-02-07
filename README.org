@@ -11,6 +11,21 @@ compute a few things for side channel attacks: input hypothesis for
 CPA correlation computation, sets of input plaintexts for t-test
 evaluations, etc.
 
+******** TODO  firstsbox. option plaintext. si pas définie, on créé le fichier plaintexts en même temps et on sort le fichier
+    :PROPERTIES:
+         :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+         :END:
+
+******** TODO revoir les arguments de chaque commande (pour tout ce qui n'est pas optionnel)
+    :PROPERTIES:
+  :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+  :END:
+
+******** TODO ajouter une commande pour afficher le numéro de version
+    :PROPERTIES:
+  :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+  :END:
+
 * required dependencies
 
 - [[https://docs.haskellstack.org][stack]]  (Debian package =haskell-stack=)
