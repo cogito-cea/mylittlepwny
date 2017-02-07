@@ -62,8 +62,8 @@ instance Mask MixColumnMask where
     in StateMask m m m m
 
 
-mask :: StateMask -> State -> State
-mask (StateMask m0 m1 m2 m3) (State w0 w1 w2 w3 ks) =
+maskWith :: StateMask -> State -> State
+maskWith (StateMask m0 m1 m2 m3) (State w0 w1 w2 w3 ks) =
   State (m0 `xor` w0)
         (m1 `xor` w1)
         (m2 `xor` w2)
@@ -132,27 +132,27 @@ aesMaskedBlockEncrypt (PreSubBytesMask pre) (PostSubBytesMask post) mcmask key i
         -- the masked sbox
         subBytes' = maskedSubBytes pre post
 
-        encrypt = mask mc'
-                ° mask m      -- TODO à supprimer après modif ks
+        encrypt = maskWith mc'
+                ° maskWith m      -- TODO à supprimer après modif ks
                 ° addRoundKey
-                ° mask mc'
+                ° maskWith mc'
                 ° blockCipher (roundsForKey key)
-                ° mask m'
-                ° mask m
+                ° maskWith m'
+                ° maskWith m
         blockCipher rounds =
             if rounds == 1
             then subBytes'
                  ° shiftRows
-                 ° mask m      -- TODO à supprimer après modif ks
+                 ° maskWith m      -- TODO à supprimer après modif ks
                  ° addRoundKey -- key schedule is masked with m
             else subBytes'
                  ° shiftRows
-                 ° mask mc
-                 ° mask m'
+                 ° maskWith mc
+                 ° maskWith m'
                  ° mixColumns
-                 ° mask m      -- TODO à supprimer après modif ks
+                 ° maskWith m      -- TODO à supprimer après modif ks
                  ° addRoundKey
-                 ° mask mc'
+                 ° maskWith mc'
                  ° blockCipher (rounds - 1)
   -- TODO annuler le masque m dans le key schedule
   -- TODO appliquer le masque m dans le key schedule
