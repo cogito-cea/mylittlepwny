@@ -18,7 +18,7 @@ import           Data.Word
 
 import           Aes.Types
 
--- | a generic data structure to handle import and export.
+-- | A generic data structure to handle import and export.
 data AesText = AesText
   Int     -- ^ the size of the plaintext, in number of bytes
   [Word8] -- ^ the plaintext bytes; the most significant byte is
@@ -70,7 +70,7 @@ instance HasAesText Ciphertext where
 
 instance HasAesText State where
   toAesText (State s0 s1 s2 s3 _) =
-    AesText 16 (octets s0 ++ octets s1 ++ octets s2 ++ octets s3)
+    AesText 16 $ reverse (octets s0 ++ octets s1 ++ octets s2 ++ octets s3)
 
   -- | a 'State' cannot be imported from text because we cannot define
   -- the 'KeySchedule' data without knowledge of the 'Key' value.  calling
