@@ -28,7 +28,7 @@ keyHypothesis byte =
 initState :: Byte -> [Plaintext] -> [[State]]
 initState byte ts =
   let keys = keyHypothesis byte
-  in  [fmap (`aesInit` t) keys | t <- ts]
+  in  [fmap (flip aesInit t) keys | t <- ts]
 
 -- | Compute the output of the first SBOX
 firstSBOX :: Key -> Plaintext -> State
