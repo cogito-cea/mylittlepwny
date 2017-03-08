@@ -137,7 +137,7 @@ main = do
 
     randomPTOptions = pure RandomPlaintexts
 
-    firstSboxCommand = command "firstsbox"
+    firstSboxCommand = command "sbox"
                        $ info firstSboxOptions
                        $ progDesc "Compute hypothesis values for the first SBOX."
 
