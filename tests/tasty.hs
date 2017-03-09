@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
 
 import           Test.SmallCheck.Series
 import           Test.SmallCheck.Series.Instances ()
