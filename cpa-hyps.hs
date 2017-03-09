@@ -21,6 +21,10 @@ newtype Size = Size Int
 
 data Command
   = RandomPlaintexts
+  | FirstAddRK { plaintexts :: !FilePath
+               , byte        :: !Int
+               -- TODO - model: HW | HD
+               }
   | FirstSBOX { plaintexts :: !FilePath
               , byte       :: !Int
               -- TODO - model: HW | HD
@@ -46,6 +50,11 @@ main = do
       let Size n = size opts
       ts <- take n <$> randomPlaintexts
       exportTexts (output opts) ts
+
+    FirstAddRK f b -> do
+      putStrLn "** CPA. compute the hypothetical values after the first AddRoundKey computation **"
+      texts <- importTexts f
+      exportHypothesis (output opts) $ hammingWeight $ firstAddRK b texts
 
     FirstSBOX f b -> do
       putStrLn "** CPA. compute the hypothetical values after the first SBOX computation **"
@@ -127,6 +136,7 @@ main = do
             )
           )
       <*> hsubparser ( randomPT
+                       <> firstAddRKCommand
                        <> firstSboxCommand
                        <> tTestFR
                        <> tTestRR
@@ -137,9 +147,27 @@ main = do
 
     randomPTOptions = pure RandomPlaintexts
 
+    firstAddRKCommand = command "addrk"
+                       $ info firstAddRKOptions
+                       $ progDesc "Compute hypothesis values for the first AddRoundKey."
+
     firstSboxCommand = command "sbox"
                        $ info firstSboxOptions
                        $ progDesc "Compute hypothesis values for the first SBOX."
+
+    firstAddRKOptions = FirstAddRK
+                       <$> strOption
+                       ( long "plaintexts"
+                         <> short 'p'
+                         <> help "Name of the input file containing the plaintext values"
+                       )
+                       <*> option auto
+                       ( long "byte"
+                         <> short 'b'
+                         <> help "Byte number in [0..15] used to compute CPA correlation hypothesis"
+                         <> value 0
+                         <> showDefault
+                       )
 
     firstSboxOptions = FirstSBOX
                        <$> strOption

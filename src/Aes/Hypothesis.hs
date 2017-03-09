@@ -30,6 +30,17 @@ initState byte ts =
   let keys = keyHypothesis byte
   in  [fmap (flip aesInit t) keys | t <- ts]
 
+-- | Considering the key byte 'byte' attacked (see 'keyHypothesis'),
+--   compute the matrix of hypothetical values at the output of the
+--   first SBOX, according to the input list of plaintexts 'ts'.
+firstAddRK :: Byte -> [Plaintext] -> [[Word8]]
+firstAddRK byte ts =
+  let states = initState byte ts
+      firstRound = (fmap . fmap) addRoundKey states
+  in  (fmap.fmap) (getByte byte . toAesText) firstRound
+  -- TODO simplification possible?
+  -- in  (fmap.fmap) (getByte byte . toAesText . addRoundKey) states
+
 -- | Compute the output of the first SBOX
 firstSBOX :: Key -> Plaintext -> State
 firstSBOX k t = aesInit k t $$ addRoundKey $$ subBytes
