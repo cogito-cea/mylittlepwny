@@ -37,23 +37,23 @@ instance Monoid AesText where
   mconcat = foldr mappend mempty
 
 class HasAesText a where
-  -- | create a 'AesText' from a textual string representation.
-  --   Expected string format: decimal integers separated by space characters.
   toAesText :: a -> AesText
-  -- | Create a textual 'String' representation from a 'AesText'.
   fromAesText :: AesText -> a
-  -- | Generalised import of 'String's. A decimal integer representation is expected.
+  -- | Import from Strings. A decimal integer representation is expected.
   stringImport :: String -> a
   stringImport = fromAesText . toAesText
-  -- | Generalised export to 'String's.
+  -- | Export to Strings, using a decimal integer textual representation.
   exportString :: a -> String
   exportString = fromAesText . toAesText
 
 instance HasAesText String where
+  -- | create a 'AesText' from a textual string representation.
+  --   Expected string format: decimal integers separated by space characters.
   toAesText xs = foldl' step mempty (words xs)
     where
       step :: AesText -> String ->  AesText
       step x t = mappend x (AesText 1 [read t])
+  -- | Create a textual 'String' representation from a 'AesText'.
   fromAesText (AesText _ ts) = unwords $ map show $ reverse ts
 
 instance HasAesText Key where
