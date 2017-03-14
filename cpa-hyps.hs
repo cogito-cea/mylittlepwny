@@ -101,8 +101,7 @@ main = do
            ( fullDesc
              <> header "cpa-hyps: compute hypothesis values for CPA attacks on AES."
              <> ( progDesc $ unlines
-                  [ "Compute hypothesis values at the output of the first SBOX."
-                  , "Outputs the results in a text file.  "
+                  [ "cpa-hyps: a few bunch of things to perform side channel attacks."
                   , ""
                   , "Use COMMAND --help to see the list of options supported by each command."
                   ]
