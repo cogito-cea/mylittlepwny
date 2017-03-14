@@ -186,7 +186,7 @@ main = do
               $ info tTestFROptions
               $ progDesc $ unlines
               [ "Compute two populations of plaintexts for the specific fixed vs. random t-test, for the output of the first SBOX."
-              , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
+              , "Generates two plaintext files named after the contents of options --population0 and --population1."
               ]
 
     tTestFROptions = TTestFR
@@ -210,7 +210,7 @@ main = do
               $ info tTestRROptions
               $ progDesc $ unlines
               [ "Compute two populations of plaintexts for the specific random vs. random t-test, for the output of the first SBOX."
-              , "Generates two output files: FILE0.txt and FILE1.txt named after the contents of the --output option."
+              , "Generates two plaintext files named after the contents of options --population0 and --population1."
               ]
 
     tTestRROptions = TTestRR
