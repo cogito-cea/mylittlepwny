@@ -60,12 +60,14 @@ main = do
 
     FirstAddRK f b -> do
       putStrLn "** CPA. compute the hypothetical values after the first AddRoundKey computation **"
-      texts <- importTexts f
+      let Size n = size opts
+      texts <- take n <$> importTexts f
       exportHypothesis (output opts) $ hammingWeight $ firstAddRK b texts
 
     FirstSBOX f b -> do
       putStrLn "** CPA. compute the hypothetical values after the first SBOX computation **"
-      texts <- importTexts f
+      let Size n = size opts
+      texts <- take n <$> importTexts f
       exportHypothesis (output opts) $ hammingWeight $ firstRoundSBOX b texts
 
     TTestFR ff fr -> do
