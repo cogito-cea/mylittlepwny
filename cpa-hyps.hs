@@ -2,7 +2,10 @@
 
 module Main where
 
+import           Data.Version        (showVersion)
 import           Options.Applicative
+import qualified Paths_haskell_aes   as V (version)
+import           System.Exit         (exitSuccess)
 
 import           Aes
 import           Aes.Hypothesis
@@ -20,9 +23,10 @@ newtype Seed = Seed Int
 newtype Size = Size Int
 
 data Command
-  = RandomPlaintexts
+  = Version
+  | RandomPlaintexts
   | FirstAddRK { plaintexts :: !FilePath
-               , byte        :: !Int
+               , byte       :: !Int
                -- TODO - model: HW | HD
                }
   | FirstSBOX { plaintexts :: !FilePath
@@ -45,6 +49,9 @@ main = do
 
   -- the real program entry point
   case progCommand opts of
+
+    Version -> putStrLn ("version " ++ showVersion V.version) >> exitSuccess
+
     RandomPlaintexts -> do
       putStrLn "** Generate random plaintexts **"
       let Size n = size opts
@@ -134,12 +141,19 @@ main = do
               <> showDefault
             )
           )
-      <*> hsubparser ( randomPT
+      <*> hsubparser ( version
+                       <> randomPT
                        <> firstAddRKCommand
                        <> firstSboxCommand
                        <> tTestFR
                        <> tTestRR
                      )
+    version  = command "version"
+               $ info versionOptions
+               $ progDesc "Print program version"
+
+    versionOptions = pure Version
+
     randomPT = command "plaintexts"
                $ info randomPTOptions
                $ progDesc "Generate a list of random plaintexts"
