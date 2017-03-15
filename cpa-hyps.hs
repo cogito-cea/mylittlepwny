@@ -39,9 +39,8 @@ data Command
             }
   | TTestRR { keyFile   :: !FilePath
             , bitnb     :: !BitNumber
-            , pop0File  :: !FilePath
-            , pop1File  :: !FilePath
-            , ciphFiles:: Maybe FilePath
+            , popFiles  :: !FilePath
+            , ciphFiles :: Maybe FilePath
             }
 
 main :: IO ()
@@ -84,7 +83,7 @@ main = do
       exportTexts ff txtf
       exportTexts fr txtr
 
-    TTestRR kfile b p0 p1 cbasename -> do
+    TTestRR kfile b pbasename cbasename -> do
       putStrLn "** t-test. specific random vs. random **"
 
       -- read the key file
@@ -97,14 +96,18 @@ main = do
           return k
 
       -- compute the two populations of plaintexts
-      pops <- ttestRR firstSBOX key b
-
       let Size n = size opts
-          pop0 = take n $ fst pops
+      pops <- ttestRR firstSBOX key b
+      let pop0 = take n $ fst pops
           pop1 = take n $ snd pops
+
+      -- store plaintext results
+      let p0 = (dropExtensions pbasename) ++ "0" <.> "txt"
+          p1 = (dropExtensions pbasename) ++ "1" <.> "txt"
       exportTexts p0 pop0
       exportTexts p1 pop1
 
+      -- do we also store expected cipher values?
       case cbasename of
         Nothing -> return ()
         Just f -> do
@@ -244,19 +247,18 @@ main = do
     tTestRROptions = TTestRR
                      <$> ttestKey
                      <*> ttestBit
-                     <*> strOption
-                     ( long "population0"
-                       <> short '0'
-                       <> value "population0.txt"
+                     <*> (
+                       strOption $
+                       long "population0"
+                       <> short 'p'
+                       <> value "population"
                        <> showDefault
-                       <> help "name of the output file containing the plaintext values for population 0"
-                     )
-                     <*> strOption
-                     ( long "population1"
-                       <> short '1'
-                       <> value "population1.txt"
-                       <> showDefault
-                       <> help "name of the output file containing the plaintext values for population 1"
+                       <> help (
+                           unlines [ "Basename of the output files containing the plaintext values for population 0. "
+                                   , "For example, with option --population pop, the program generates two files: "
+                                   , "  pop0.txt and pop1.txt"
+                                   ]
+                           )
                      )
                      <*> (
                        optional $ strOption $
