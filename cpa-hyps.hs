@@ -78,7 +78,7 @@ main = do
           -- fixed value proposed by Goodwill et al., 2011
           fixedtext = stringImport "0x90 0x18 0x60 0x95 0xef 0xbf 0x55 0x32 0x0d 0x4b 0x6b 0x5e 0xee 0xa3 0x39 0xda"
           Size n = size opts
-          txtf = take n $ repeat $ fixedtext
+          txtf = replicate n fixedtext
       txtr <- take n <$> randomPlaintexts
       exportTexts ff txtf
       exportTexts fr txtr
@@ -102,8 +102,8 @@ main = do
           pop1 = take n $ snd pops
 
       -- store plaintext results
-      let p0 = (dropExtensions pbasename) ++ "0" <.> "txt"
-          p1 = (dropExtensions pbasename) ++ "1" <.> "txt"
+      let p0 = dropExtensions pbasename ++ "0" <.> "txt"
+          p1 = dropExtensions pbasename ++ "1" <.> "txt"
       exportTexts p0 pop0
       exportTexts p1 pop1
 
@@ -111,8 +111,8 @@ main = do
       case cbasename of
         Nothing -> return ()
         Just f -> do
-          let c0 = (dropExtensions f) ++ "0" <.> "txt"
-              c1 = (dropExtensions f) ++ "1" <.> "txt"
+          let c0 = dropExtensions f ++ "0" <.> "txt"
+              c1 = dropExtensions f ++ "1" <.> "txt"
           exportTexts c0 $ map (aesBlockEncrypt key) pop0
           exportTexts c1 $ map (aesBlockEncrypt key) pop1
 
@@ -124,12 +124,13 @@ main = do
       info ( helper <*> programOptions )
            ( fullDesc
              <> header "cpa-hyps: compute hypothesis values for CPA attacks on AES."
-             <> ( progDesc $ unlines
-                  [ "cpa-hyps: a few bunch of things to perform side channel attacks."
-                  , ""
-                  , "Use COMMAND --help to see the list of options supported by each command."
-                  ]
-                )
+             <> progDesc
+             ( unlines
+               [ "cpa-hyps: a few bunch of things to perform side channel attacks."
+               , ""
+               , "Use COMMAND --help to see the list of options supported by each command."
+               ]
+             )
            )
     programOptions = Opts
       <$> strOption
@@ -238,54 +239,54 @@ main = do
 
 
     tTestRR = command "ttest-rr"
-              $ info tTestRROptions
+              $ info ttRROpts
               $ progDesc $ unlines
               [ "Compute two populations of plaintexts for the specific random vs. random t-test, for the output of the first SBOX."
               , "Generates two plaintext files named after the contents of options --population0 and --population1."
               ]
 
-    tTestRROptions = TTestRR
-                     <$> ttestKey
-                     <*> ttestBit
-                     <*> (
-                       strOption $
-                       long "population0"
-                       <> short 'p'
-                       <> value "population"
-                       <> showDefault
-                       <> help (
-                           unlines [ "Basename of the output files containing the plaintext values for population 0. "
-                                   , "For example, with option --population pop, the program generates two files: "
-                                   , "  pop0.txt and pop1.txt"
-                                   ]
-                           )
-                     )
-                     <*> (
-                       optional $ strOption $
-                       long "ciphers"
-                       <> short 'c'
-                       <> metavar "CIPHERS"
-                       <> help (
-                           unlines ["Generate the lists of expected cipher values in two files named after CIPHERS."
-                                   , "CIPHERS is the basename of the two files generated."
-                                   , "For example, with option --ciphers ciph, the program generates two files:"
-                                   , "  ciph0.txt which contains the expected ciphers for population 0,"
-                                   , "  and ciph1.txt which contains the expected ciphers for population 1."
-                                   ]
-                           )
-                       )
-
-    ttestKey = strOption
-               ( long "key"
-                 <> short 'k'
-                 <> metavar "KEYFILE"
-                 <> help "the input key file"
-               )
-    ttestBit = bitNumber <$> option auto
-               ( long "bit-number"
-                 <> short 'b'
-                 <> metavar "BIT_NUMBER"
-                 <> help "number of the state bit observed"
-                 <> value 0
-                 <> showDefault
-               )
+    ttRROpts = TTestRR <$>
+      strOption (
+        long "key"
+        <> short 'k'
+        <> metavar "KEYFILE"
+        <> help "the input key file"
+      )
+      <*>
+      ( bitNumber <$> option auto
+        ( long "bit-number"
+          <> short 'b'
+          <> metavar "BIT_NUMBER"
+          <> help "number of the state bit observed"
+          <> value 0
+          <> showDefault
+        )
+      )
+      <*>
+      strOption
+      ( long "population0"
+        <> short 'p'
+        <> value "population"
+        <> showDefault
+        <> help (
+          unlines [ "Basename of the output files containing the plaintext values for population 0. "
+                  , "For example, with option --population pop, the program generates two files: "
+                  , "  pop0.txt and pop1.txt"
+                  ]
+          )
+      )
+      <*>
+      optional
+      ( strOption $
+        long "ciphers"
+        <> short 'c'
+        <> metavar "CIPHERS"
+        <> help (
+          unlines ["Generate the lists of expected cipher values in two files named after CIPHERS."
+                  , "CIPHERS is the basename of the two files generated."
+                  , "For example, with option --ciphers ciph, the program generates two files:"
+                  , "  ciph0.txt which contains the expected ciphers for population 0,"
+                  , "  and ciph1.txt which contains the expected ciphers for population 1."
+                  ]
+          )
+      )
