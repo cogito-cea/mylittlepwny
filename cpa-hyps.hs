@@ -6,6 +6,7 @@ import           Data.Version        (showVersion)
 import           Options.Applicative
 import qualified Paths_haskell_aes   as V (version)
 import           System.Exit         (exitSuccess)
+import           System.FilePath
 
 import           Aes
 import           Aes.Hypothesis
@@ -36,10 +37,11 @@ data Command
   | TTestFR { fixed  :: !FilePath
             , random :: !FilePath
             }
-  | TTestRR { keyFile :: !FilePath
-            , bitnb   :: !BitNumber
-            , pop0    :: !FilePath
-            , pop1    :: !FilePath
+  | TTestRR { keyFile   :: !FilePath
+            , bitnb     :: !BitNumber
+            , pop0File  :: !FilePath
+            , pop1File  :: !FilePath
+            , ciphFiles:: Maybe FilePath
             }
 
 main :: IO ()
@@ -82,7 +84,7 @@ main = do
       exportTexts ff txtf
       exportTexts fr txtr
 
-    TTestRR kfile b p0 p1 -> do
+    TTestRR kfile b p0 p1 cbasename -> do
       putStrLn "** t-test. specific random vs. random **"
 
       -- read the key file
@@ -98,8 +100,18 @@ main = do
       pops <- ttestRR firstSBOX key b
 
       let Size n = size opts
-      exportTexts p0 (take n $ fst pops)
-      exportTexts p1 (take n $ snd pops)
+          pop0 = take n $ fst pops
+          pop1 = take n $ snd pops
+      exportTexts p0 pop0
+      exportTexts p1 pop1
+
+      case cbasename of
+        Nothing -> return ()
+        Just f -> do
+          let c0 = (dropExtensions f) ++ "0" <.> "txt"
+              c1 = (dropExtensions f) ++ "1" <.> "txt"
+          exportTexts c0 $ map (aesBlockEncrypt key) pop0
+          exportTexts c1 $ map (aesBlockEncrypt key) pop1
 
   putStrLn "** End of processing **"
 
@@ -246,6 +258,20 @@ main = do
                        <> showDefault
                        <> help "name of the output file containing the plaintext values for population 1"
                      )
+                     <*> (
+                       optional $ strOption $
+                       long "ciphers"
+                       <> short 'c'
+                       <> metavar "CIPHERS"
+                       <> help (
+                           unlines ["Generate the lists of expected cipher values in two files named after CIPHERS."
+                                   , "CIPHERS is the basename of the two files generated."
+                                   , "For example, with option --ciphers ciph, the program generates two files:"
+                                   , "  ciph0.txt which contains the expected ciphers for population 0,"
+                                   , "  and ciph1.txt which contains the expected ciphers for population 1."
+                                   ]
+                           )
+                       )
 
     ttestKey = strOption
                ( long "key"
