@@ -28,11 +28,9 @@ data Command
   | RandomPlaintexts
   | FirstAddRK { plaintexts :: !FilePath
                , byte       :: !Int
-               -- TODO - model: HW | HD
                }
   | FirstSBOX { plaintexts :: !FilePath
               , byte       :: !Int
-              -- TODO - model: HW | HD
               }
   | TTestFR { fixed  :: !FilePath
             , random :: !FilePath
@@ -180,11 +178,11 @@ main = do
 
     firstAddRKCommand = command "addrk"
                        $ info firstAddRKOptions
-                       $ progDesc "Compute hypothesis values for the first AddRoundKey."
+                       $ progDesc "Compute hypothesis values for the first AddRoundKey, using a Hamming weight model."
 
     firstSboxCommand = command "sbox"
                        $ info firstSboxOptions
-                       $ progDesc "Compute hypothesis values for the first SBOX."
+                       $ progDesc "Compute hypothesis values for the first SBOX, using a Hamming weight model."
 
     firstAddRKOptions = FirstAddRK
                        <$> strOption
