@@ -34,6 +34,9 @@ instance Monad m => Serial m MixColumnMask where
 instance Monad m => Serial m Plaintext where
   series = newtypeCons Plaintext
 
+instance Monad m => Serial m Ciphertext where
+  series = newtypeCons Ciphertext
+
 instance Monad m => Serial m BitNumber where
   -- We are interested in integer bit-values up to 256 elements only
   -- (in the case of AES-256), no more.
@@ -102,7 +105,16 @@ aesProperties = testGroup "Properties: first order masking scheme"
 
 ieProperties :: TestTree
 ieProperties = testGroup "Properties: import and export functions"
-  [ testProperty "identity of importTexts . exportTexts" $
+  [ testProperty "identity of fromAesText . toAesText :: Plaintext" $
+    forAll $ \x ->
+      (fromAesText . toAesText) x == (x :: Plaintext)
+  , testProperty "identity of fromAesText . toAesText :: Ciphertext" $
+    forAll $ \x ->
+      (fromAesText . toAesText) x == (x :: Ciphertext)
+  , testProperty "identity of importTexts . exportTexts :: Plaintext" $
+    forAll $ \t ->
+      stringImport (exportString t) == (t :: Plaintext)
+  , testProperty "identity of importTexts . exportTexts :: Ciphertext" $
     forAll $ \t ->
       stringImport (exportString t) == (t :: Plaintext)
   ]
