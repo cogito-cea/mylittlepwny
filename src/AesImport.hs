@@ -54,7 +54,7 @@ instance HasAesText String where
       step :: AesText -> String ->  AesText
       step x t = mappend x (AesText 1 [read t])
   -- | Create a textual 'String' representation from a 'AesText'.
-  fromAesText (AesText _ ts) = unwords $ map show $ reverse ts
+  fromAesText (AesText _ ts) = unwords $ map show ts
 
 instance HasAesText Key where
   toAesText = undefined
@@ -62,15 +62,15 @@ instance HasAesText Key where
 
 instance HasAesText Plaintext where
   toAesText (Plaintext ts) = AesText (length ts) ts
-  fromAesText (AesText _ ts) = Plaintext $ reverse ts
+  fromAesText (AesText _ ts) = Plaintext ts
 
 instance HasAesText Ciphertext where
   toAesText (Ciphertext ts) = AesText (length ts) ts
-  fromAesText (AesText _ ts) = Ciphertext $ reverse ts
+  fromAesText (AesText _ ts) = Ciphertext ts
 
 instance HasAesText State where
   toAesText (State s0 s1 s2 s3 _) =
-    AesText 16 $ reverse (octets s0 ++ octets s1 ++ octets s2 ++ octets s3)
+    AesText 16 $ octets s0 ++ octets s1 ++ octets s2 ++ octets s3
 
   -- | a 'State' cannot be imported from text because we cannot define
   -- the 'KeySchedule' data without knowledge of the 'Key' value.  calling
@@ -99,9 +99,9 @@ exportTexts f ts = Prelude.writeFile f $ unlines $ map exportString ts
 -- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
 -- TODO: key :: AesText -> Maybe Key
 key :: AesText -> Key
-key (AesText 16 bs) = Key128 $ RawKey $ tow32 $ reverse bs
-key (AesText 24 bs) = Key192 $ RawKey $ tow32 $ reverse bs
-key (AesText 32 bs) = Key256 $ RawKey $ tow32 $ reverse bs
+key (AesText 16 bs) = Key128 $ RawKey $ tow32 $ bs
+key (AesText 24 bs) = Key192 $ RawKey $ tow32 $ bs
+key (AesText 32 bs) = Key256 $ RawKey $ tow32 $ bs
 key (AesText n _)   = error $ "unknown key length: " ++ show n
 -- | Convert each group of 4 'Word8's to a 'Word32'.
 tow32 :: [Word8] -> [Word32]
