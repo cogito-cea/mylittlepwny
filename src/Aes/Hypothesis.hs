@@ -16,8 +16,8 @@ import           AesImport
 --   15, 23, 31 included for AES-128, AES-196 and AES-256 respectively.
 keyHypothesis :: Byte -> [Key]
 keyHypothesis byte =
-  let pre = replicate (15 - byte) 0
-      post = replicate byte 0
+  let pre  = replicate byte 0
+      post = replicate (15 - byte) 0
       keybytes = [pre ++ [k] ++ post | k <- [0..255]]
       keyw32 = map tow32 keybytes
   in  map (Key128 . RawKey) keyw32
