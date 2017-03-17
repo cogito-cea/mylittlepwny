@@ -24,7 +24,7 @@ import           Aes.Types
 -- | A generic data structure to handle import and export.
 data AesText = AesText
   Int     -- ^ the size of the plaintext, in number of bytes
-  [Word8] -- ^ the plaintext bytes; the most significant byte is
+  [Word8] -- ^ the plaintext bytes; the least significant byte is
           --   stored first in the list.
   deriving (Show)
 
@@ -52,6 +52,8 @@ class HasAesText a where
 instance HasAesText String where
   -- | create a 'AesText' from a textual string representation.
   --   Expected string format: decimal integers separated by space characters.
+  --
+  --   The least significant byte is expected to come first in the list of input string values.
   toAesText xs = foldl' step mempty (words xs)
     where
       step :: AesText -> String ->  AesText
@@ -72,6 +74,7 @@ instance HasAesText Ciphertext where
   fromAesText (AesText _ ts) = Ciphertext ts
 
 instance HasAesText State where
+  -- | Convert a State to AesText.  The conversion drops the KeySchedule part of State.
   toAesText (State s0 s1 s2 s3 _) =
     AesText 16 $ octets s0 ++ octets s1 ++ octets s2 ++ octets s3
 
@@ -113,7 +116,8 @@ key (AesText 16 bs) = Key128 $ RawKey $ tow32 $ bs
 key (AesText 24 bs) = Key192 $ RawKey $ tow32 $ bs
 key (AesText 32 bs) = Key256 $ RawKey $ tow32 $ bs
 key (AesText n _)   = error $ "unknown key length: " ++ show n
--- | Convert each group of 4 'Word8's to a 'Word32'.
+
+-- | Convert each group of 4 'Word8's to a 'Word32', following a Big Endian-like representation.
 tow32 :: [Word8] -> [Word32]
 tow32 [] = []
 tow32 ws = let (w32, rest) = splitAt 4 ws

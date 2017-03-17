@@ -15,7 +15,7 @@ import qualified System.Random                      as R
    data types
  ----------------------------------------------------}
 
--- | a 'Plaintext' is a list of 'Word8' values, most significant byte
+-- | a 'Plaintext' is a list of 'Word8' values, least significant byte
 --   first in the list.
 newtype Plaintext = Plaintext [Word8]
   deriving (Eq, Show)
@@ -30,14 +30,14 @@ instance R.Random Plaintext where
   random = random
   randomR = randomR
 
--- | a Ciphertext is a list of Word8, most significant byte first.
+-- | a Ciphertext is a list of Word8, least significant byte first.
 newtype Ciphertext = Ciphertext [Word8]
   deriving (Eq, Show)
 
 cipherToHex :: Ciphertext -> [ByteString]
 cipherToHex (Ciphertext cs) = map (toLazyByteString . word8Hex) cs
 
--- | The "most significant" word32 value is 'state0'
+-- | The "least significant" word32 value is 'state0'
 data State = State
              { state0   :: Word32
              , state1   :: Word32
@@ -51,6 +51,9 @@ data Key = Key128 RawKey
          | Key256 RawKey
          deriving (Show)
 
+-- | Similarly to Plaintext and Ciphertext, RawKey is a kind-of Big
+-- Endian representation of Word32 values: the "least significant" Word32
+-- value comes first in the list.
 newtype RawKey = RawKey [Word32]
   deriving (Show)
 
@@ -121,6 +124,13 @@ randomR (Plaintext los, Plaintext his) g =
 {----------------------------------------------------
     low level operations
  ----------------------------------------------------}
+-- | Build a list of Word8 from a Word32 value.
+--   The "most significant" byte comes first in the result [Word8].
+--
+-- >>> octets 0x00010000
+-- [0,1,0,0]
+-- >>> octets 0x01000010
+-- [1,0,0,16]
 octets :: Word32 -> [Word8]
 octets i =
     [ fromIntegral $ i `shiftR` 24
@@ -129,6 +139,18 @@ octets i =
     , fromIntegral i
     ]
 
+-- | Concatenate a list of Word8 in a Word32.
+--   The "most significant" Word8 value is the first element in the
+--   list [Word8], i.e. [Word8] is a kind-of Big Endian representation
+--   of a Word32.
+--
+--   i.e. fromOctets [w3, w2, w1, w0] -> w3w2w1w0
+--
+-- >>> import Text.Printf
+-- >>> printf "0x%x" $ fromOctets [1, 0, 0, 0]
+-- 0x1000000
+-- >>> printf "0x%x" $ fromOctets [1, 0, 0, 16]
+-- 0x1000010
 fromOctets :: [Word8] -> Word32
 fromOctets = foldl' shiftOp 0
     where shiftOp l b = (l `shiftL` 8) .|. (fromIntegral b)
