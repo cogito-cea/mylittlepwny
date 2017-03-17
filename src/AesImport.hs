@@ -11,10 +11,13 @@ module AesImport
 
   , exportTexts
   , importTexts
+
+  , toHex
   ) where
 
 import           Data.List (foldl')
 import           Data.Word
+import Text.Printf (printf)
 
 import           Aes.Types
 
@@ -95,6 +98,13 @@ exportTexts :: HasAesText a =>
             -> [a]
             -> IO ()
 exportTexts f ts = Prelude.writeFile f $ unlines $ map exportString ts
+
+-- | Translate to the same hexadecimal representation than the one
+--   used in the FIPS 197 note, section C.1
+toHex :: AesText -> String
+toHex (AesText _ xs) = foldl step "" xs
+  where
+    step string x = string ++ printf "%02x" x
 
 -- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
 -- TODO: key :: AesText -> Maybe Key
