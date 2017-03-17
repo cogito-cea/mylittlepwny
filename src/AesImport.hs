@@ -62,7 +62,7 @@ instance HasAesText String where
   fromAesText (AesText _ ts) = unwords $ map show ts
 
 instance HasAesText Key where
-  toAesText = undefined
+  toAesText = error "ERROR. toAesText is not defined for type Key."
   fromAesText = key
 
 instance HasAesText Plaintext where
