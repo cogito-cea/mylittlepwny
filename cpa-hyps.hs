@@ -6,6 +6,7 @@ import           Data.Version        (showVersion)
 import           Options.Applicative
 import qualified Paths_haskell_aes   as V (version)
 import           System.Exit         (exitSuccess)
+import System.Random (randoms, getStdGen)
 
 import           Aes
 import           Aes.Hypothesis
@@ -30,8 +31,8 @@ data Command
   | FirstSBOX { plaintexts :: !FilePath
               , byte       :: !Int
               }
-  | TTestFR { fixed  :: !FilePath
-            , random :: !FilePath
+  | TTestFR { textFile :: !FilePath
+            , sprtFile :: !FilePath
             }
   | TTestRR { keyFile  :: !FilePath
             , bitnb    :: !BitNumber
@@ -68,19 +69,32 @@ main = do
       texts <- take n <$> importTexts f
       exportHypothesis (output opts) $ hammingWeight $ firstRoundSBOX b texts
 
-    TTestFR ff fr -> do
-      putStrLn "** t-test. specific fixed vs. random **"
-
+    TTestFR pfile sepfile -> do
+      putStrLn "** non-specific t-test. fixed vs. random **"
       let fixedtext :: Plaintext
           -- fixed value proposed by Goodwill et al., 2011
           fixedtext = stringImport "0x90 0x18 0x60 0x95 0xef 0xbf 0x55 0x32 0x0d 0x4b 0x6b 0x5e 0xee 0xa3 0x39 0xda"
-          Size n = size opts
-          txtf = replicate n fixedtext
-      txtr <- take n <$> randomPlaintexts
-      exportTexts ff txtf
-      exportTexts fr txtr
 
-    TTestRR kfile b textfile sprtfile ciphfile -> do
+      -- a list of random Bool values
+      bools <- randoms <$> getStdGen
+
+      -- a list of random Plaintexts
+      texts <- randomPlaintexts
+
+      let sepfun :: [Plaintext] -> [Bool] -> [(Plaintext, Int)]
+          sepfun ps bs = zipWith go ps bs
+            where
+              go _ False = (fixedtext, 0)
+              go p True  = (p,         1)
+
+      let Size n = size opts
+
+      let res = take n $ sepfun texts bools
+
+      exportTexts pfile $ map fst res
+      writeFile sepfile $ unlines $ map (show . snd) res
+
+    TTestRR kfile b textfile sprtfile cfile -> do
       putStrLn "** t-test. specific random vs. random **"
 
       -- read the key file
@@ -103,7 +117,7 @@ main = do
       -- store results
       exportTexts textfile texts
       writeFile sprtfile $ unlines $ map show sep
-      case ciphfile of
+      case cfile of
         Nothing -> return ()
         Just f -> do
           exportTexts f $ map (aesBlockEncrypt key) texts
@@ -207,44 +221,27 @@ main = do
                        )
 
     tTestFR = command "ttest-fr"
-              $ info tTestFROptions
+              $ info (TTestFR <$> txtOpt <*> sepOpt)
               $ progDesc $ unlines
-              [ "Compute two populations of plaintexts for the specific fixed vs. random t-test, for the output of the first SBOX."
+              [ "Compute two populations of plaintexts for the non-specific t-test (fixed vs. random), for the output of the first SBOX."
               , "Generates two plaintext files named after the contents of options --population0 and --population1."
               ]
 
-    tTestFROptions = TTestFR
-                     <$> strOption
-                     ( long "fixed"
-                       <> short '0'
-                       <> value "fixed.txt"
-                       <> showDefault
-                       <> help "name of the output file containing the fixed plaintext values"
-                     )
-                     <*> strOption
-                     ( long "random"
-                       <> short '1'
-                       <> value "randoms.txt"
-                       <> showDefault
-                       <> help "name of the output file containing the random plaintext values"
-                     )
-
-
     tTestRR = command "ttest-rr"
-              $ info ttRROpts
+              $ info (TTestRR <$> keyOpt <*> bitOpt <*> txtOpt <*> sepOpt <*> cphOpt)
               $ progDesc $ unlines
-              [ "Compute two populations of plaintexts for the specific random vs. random t-test, for the output of the first SBOX. "
+              [ "Compute two populations of plaintexts for the specific t-test (random vs. random), for the output of the first SBOX. "
               , "Generates a list of plaintexts and a list of values {0,1} to separate the two t-test populations. "
               ]
 
-    ttRROpts = TTestRR <$>
+    keyOpt =
       strOption (
         long "key"
         <> short 'k'
         <> metavar "KEYFILE"
         <> help "the input key file"
       )
-      <*>
+    bitOpt =
       ( bitNumber <$> option auto
         ( long "bit-number"
           <> short 'b'
@@ -254,7 +251,7 @@ main = do
           <> showDefault
         )
       )
-      <*>
+    txtOpt =
       strOption
       ( long "plaintexts"
         <> short 'p'
@@ -262,7 +259,7 @@ main = do
         <> showDefault
         <> help "Name of the output file containing the plaintext values for the two populations."
       )
-      <*>
+    sepOpt =
       strOption
       ( long "separate"
         <> short 's'
@@ -270,7 +267,7 @@ main = do
         <> showDefault
         <> help "This generated files has the same length than the plaintext file.  It contains a list of integer values either 0 or 1, in order to separate the plaintexts between two populations '0' and '1'."
       )
-      <*>
+    cphOpt =
       optional
       ( strOption $
         long "ciphers"
