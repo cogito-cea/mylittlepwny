@@ -144,7 +144,7 @@ main = do
               <> short 'n'
               <> metavar "NUMBER"
               <> help "Size of the set of plaintexts generated"
-              <> value 1024
+              <> value 16384
               <> showDefault
             )
           )
