@@ -18,7 +18,6 @@ import           Aes
 import           Aes.Hypothesis                   (firstSBOX)
 import           AesImport
 import           Masking
-import           TTest
 
 import           Aes.Types
 
@@ -53,7 +52,6 @@ tests = testGroup "Tests" [ unitTests
                           , aesProperties
                           , ieProperties
                           , bitProperties
-                          , ttestProperties
                           ]
 
 unitTests :: TestTree
@@ -131,18 +129,3 @@ bitProperties = testGroup "Properties: Aes.Bits"
   -- State. stringImport cannot import a state value.
   ]
 
-ttestProperties :: TestTree
-ttestProperties = testGroup "Properties: t-tests"
-  [
-    -- check that the two populations of t-tests produce correct intermediate values.
-    testProperty "t-test, random vs. random.  using the first SBOX output of AES" $
-    -- 'monadic' executes the test in the IO monad
-    forAll $ \(b :: BitNumber) -> monadic $ do
-      (pop0, pop1) <- ttestRR firstSBOX k b
-      let t0 = head pop0
-          t1 = head pop1
-      return $ (&&) (bit b (firstSBOX k t0) == 0) (bit b (firstSBOX k t1) == 1)
-  ]
-  where
-    k :: Key
-    k = stringImport "15 14 13 12 11 10 09 08 07 06 05 04 03 02 01 00"
