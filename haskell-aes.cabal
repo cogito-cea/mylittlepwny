@@ -73,7 +73,17 @@ test-suite tasty
                   , array >=0.5 && <0.6
                   , bytestring
   default-language: Haskell2010
-  ghc-options:    -Wall -threaded -O2 +RTS -N -RTS
+  ghc-options:      -Wall -threaded -O2 +RTS -N -RTS
+
+test-suite doctest
+  type: exitcode-stdio-1.0
+  hs-source-dirs:   tests
+  main-is:          doctest.hs
+  build-depends:    haskell-aes
+                  , base >= 4 && < 5
+                  , doctest
+  default-language: Haskell2010
+  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
 
 flag debug
     default: False

@@ -21,10 +21,11 @@ import Text.Printf (printf)
 
 import           Aes.Types
 
--- | A generic data structure to handle import and export.
+-- | A generic data structure to handle import and export.  The data
+--   structure describes is a fixed-length vector of words.
 data AesText = AesText
-  Int     -- ^ the size of the plaintext, in number of bytes
-  [Word8] -- ^ the plaintext bytes; the least significant byte is
+  Int     --   the size of the plaintext, in number of bytes
+  [Word8] --   the plaintext bytes; the least significant byte is
           --   stored first in the list.
   deriving (Show)
 
