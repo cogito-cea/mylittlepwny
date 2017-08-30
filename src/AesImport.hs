@@ -15,9 +15,10 @@ module AesImport
   , toHex
   ) where
 
-import           Data.List (foldl')
+import qualified Data.ByteString       as B
+import           Data.List             (foldl')
 import           Data.Word
-import Text.Printf (printf)
+import           Text.Printf           (printf)
 
 import           Aes.Types
 
@@ -75,6 +76,10 @@ instance HasAesText String where
       step x t = mappend x (AesText 1 [read t])
   -- | Create a textual 'String' representation from a 'AesText'.
   fromAesText (AesText _ ts) = unwords $ map show ts
+
+instance HasAesText B.ByteString where
+  toAesText bs = AesText (B.length bs) (B.unpack bs)
+  fromAesText (AesText _ text) = B.pack text
 
 instance HasAesText Key where
   toAesText (Key128 (RawKey bytes)) = AesText 16 (concat $ map octets' bytes)
