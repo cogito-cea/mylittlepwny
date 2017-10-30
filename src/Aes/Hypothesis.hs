@@ -30,6 +30,11 @@ initState byte ts =
   let keys = keyHypothesis byte
   in  [fmap (flip aesInit t) keys | t <- ts]
 
+initState' :: Byte -> Plaintext -> [State]
+initState' byte t =
+  let keys = keyHypothesis byte
+  in  [aesInit k t | k <- keys]
+
 -- | Considering the key byte 'byte' attacked (see 'keyHypothesis'),
 --   compute the matrix of hypothetical values at the output of the
 --   first SBOX, according to the input list of plaintexts 'ts'.
@@ -53,6 +58,15 @@ firstRoundSBOX byte ts =
   let states = initState byte ts
       firstRound = (fmap . fmap) (subBytes . addRoundKey) states
   in  (fmap.fmap) (getByte byte . toAesText) firstRound
+
+-- TODO pour la première ronde on peut faire plus malin parce que les octets de
+-- state AES ne sont pas encore mélangés.
+firstRoundSBOX' :: Byte -> Plaintext -> [Word8]
+firstRoundSBOX' byte t =
+  let states = initState' byte t
+      firstRound = fmap (subBytes . addRoundKey) states
+  in  fmap (getByte byte . toAesText) firstRound
+
 
 -- | Power model: compute the hamming weight.
 hammingWeight :: [[Word8]] -> [[Int]]
