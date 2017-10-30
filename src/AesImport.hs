@@ -50,6 +50,7 @@ class HasAesText a where
   -- ""
   -- >>> stringImport  "0"  :: Key
   -- *** Exception: unknown key length: 1
+  -- ...
   -- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"  :: Key
   -- Key128 (RawKey [66051,67438087,134810123,202182159])
   -- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23"  :: Key
