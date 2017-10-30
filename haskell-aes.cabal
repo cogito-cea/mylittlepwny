@@ -24,10 +24,10 @@ library
                      , AesImport
                      , Masking
                      , Aes.Hypothesis
+                     , Aes.Random
   other-modules:       Aes.Reference
                      , Aes.Types
                      , Aes.Util
-                     , Aes.Random
                      , Aes.Bits
   build-depends:       base >= 4 && < 5
                      , array >=0.5 && <0.6
