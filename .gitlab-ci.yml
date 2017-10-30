@@ -1,9 +1,30 @@
-image: haskell:7.10.3
+# using docker in docker. It's wase to use the overlayfs driver for
+# improved performance and reduce disk usage.
+variables:
+    DOCKER_DRIVER: overlay
 
 before_script:
-  - stack setup
+    - docker info
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
 
-main:
-  script:
-    - stack build
-    - stack test
+stages:
+    - build_image
+    - build
+    - test
+
+image_build:
+    stage: build_image
+    script:
+      - docker build --tag haskell-aes:latest docker
+
+scarlet_build:
+    stage: build
+    script:
+      - docker run --volume $(pwd):/haskell-aes --env LOCAL_USER_ID=$(id -u) --interactive haskell-aes:latest stack setup
+      - docker run --volume $(pwd):/haskell-aes --env LOCAL_USER_ID=$(id -u) --interactive haskell-aes:latest stack build
+
+scarlet_cleanup:
+    stage: test
+    script:
+      - docker run --rm --volume $(pwd):/haskell-aes --env LOCAL_USER_ID=$(id -u) --interactive haskell-aes:latest stack test
