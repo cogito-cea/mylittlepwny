@@ -1,20 +1,10 @@
-.PHONY: build
-build:
-	stack build
-
-.PHONY: run
-run: build
-	stack exec cpa-hyps -- --help
-
-.PHONY: test
-test:
+all: build
+test: build
 	stack test
-
-.PHONY: stylish-haskell
-stylish-haskell:
-	find . src tests -name '*hs' -exec stylish-haskell {} -i \;
-
-# install binaries locally, in $HOME/.local/bin
-.PHONY: install
-install: build
-	stack install
+build: setup
+	stack build
+setup:
+	stack setup
+clean:
+	stack clean
+.PHONY: all setup build test
