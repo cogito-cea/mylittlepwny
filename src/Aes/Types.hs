@@ -128,16 +128,19 @@ randomR (Plaintext los, Plaintext his) g =
 --   The "most significant" byte comes first in the result [Word8].
 --
 -- >>> octets 0x00010000
--- [0,1,0,0]
+-- (0,1,0,0)
 -- >>> octets 0x01000010
--- [1,0,0,16]
-octets :: Word32 -> [Word8]
+-- (1,0,0,16)
+octets :: Word32 -> (Word8, Word8, Word8, Word8)
 octets i =
-    [ fromIntegral $ i `shiftR` 24
+    ( fromIntegral $ i `shiftR` 24
     , fromIntegral $ i `shiftR` 16
     , fromIntegral $ i `shiftR` 8
     , fromIntegral i
-    ]
+    )
+octets' :: Word32 -> [Word8]
+octets' w = let (a,b,c,d) = octets w
+            in  [a, b, c, d]
 
 -- | Concatenate a list of Word8 in a Word32.
 --   The "most significant" Word8 value is the first element in the
@@ -152,5 +155,5 @@ octets i =
 -- >>> printf "0x%x" $ fromOctets [1, 0, 0, 16]
 -- 0x1000010
 fromOctets :: [Word8] -> Word32
-fromOctets = foldl' shiftOp 0
+fromOctets wtup = foldl' shiftOp 0 wtup
     where shiftOp l b = (l `shiftL` 8) .|. (fromIntegral b)

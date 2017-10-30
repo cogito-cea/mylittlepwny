@@ -79,7 +79,7 @@ mixColumnsMask (StateMask w0 w1 w2 w3) =
             (mixOctets w3)
   where
     mixOctets w32 = mix $ octets w32
-    mix ([s0,s1,s2,s3]) =
+    mix (s0,s1,s2,s3) =
       fromOctets [ mixCol0 s0 s1 s2 s3
                  , mixCol1 s0 s1 s2 s3
                  , mixCol2 s0 s1 s2 s3
@@ -91,15 +91,15 @@ mixColumnsMask (StateMask w0 w1 w2 w3) =
 --   @S'(s `xor` m) = S(s) `xor` m'@.
 maskedSubBytes :: Mask8 -> Mask8 -> State -> State
 maskedSubBytes m m' = \st ->
-  State (subWord $ state0 st)
-        (subWord $ state1 st)
-        (subWord $ state2 st)
-        (subWord $ state3 st)
+  State (word' $ state0 st)
+        (word' $ state1 st)
+        (word' $ state2 st)
+        (word' $ state3 st)
         (schedule st)
   where
     maskedSubByte i = maskedSubBytesArray m m' ! i
-    subWord w32 =
-        fromOctets $ map maskedSubByte $ octets w32
+    word' w32 =
+        fromOctets $ map maskedSubByte $ octets' w32
 
 -- | the new subBytes array, given two input mask bytes @m@ and @m'@
 maskedSubBytesArray :: Mask8 -> Mask8 -> Array Word8 Word8

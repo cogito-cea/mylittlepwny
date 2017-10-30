@@ -88,7 +88,7 @@ plaintextToState (Plaintext ws) =
 
 stateToCiphertext :: State -> Ciphertext
 stateToCiphertext (State w0 w1 w2 w3 _) =
-        Ciphertext $ (octets w0) ++ (octets w1) ++ (octets w2) ++ (octets w3)
+        Ciphertext $ (octets' w0) ++ (octets' w1) ++ (octets' w2) ++ (octets' w3)
 
 {----------------------------------------------------
     the AES round functions
@@ -116,7 +116,7 @@ subByte x = subBytesArray ! x
 
 subWord :: Word32 -> Word32
 subWord w32 =
-    fromOctets $ map subByte $ octets w32
+    fromOctets $ map subByte $ octets' w32
 
 subBytes :: State -> State
 subBytes st@(State w0 w1 w2 w3 _) =
@@ -133,8 +133,8 @@ shiftRows :: State -> State
 shiftRows st@(State w0 w1 w2 w3 _) =
         shiftf (octets w0) (octets w1) (octets w2) (octets w3)
     where
-        shiftf ([w00,w01,w02,w03]) ([w10,w11,w12,w13])
-               ([w20,w21,w22,w23]) ([w30,w31,w32,w33]) =
+        shiftf (w00,w01,w02,w03) (w10,w11,w12,w13)
+               (w20,w21,w22,w23) (w30,w31,w32,w33) =
                      st { state0 = (fromOctets [w00,w11,w22,w33]),
                           state1 = (fromOctets [w10,w21,w32,w03]),
                           state2 = (fromOctets [w20,w31,w02,w13]),
@@ -180,12 +180,13 @@ mixColumns st@(State w0 w1 w2 w3 _) =
              state3 = (mixOctets w3) }
     where
         mixOctets w32 = mix $ octets w32
-        mix ([s0,s1,s2,s3]) =
+        mix (s0,s1,s2,s3) =
             fromOctets
                     [ mixCol0 s0 s1 s2 s3
                     , mixCol1 s0 s1 s2 s3
                     , mixCol2 s0 s1 s2 s3
-                    , mixCol3 s0 s1 s2 s3]
+                    , mixCol3 s0 s1 s2 s3
+                    ]
 
 {----------------------------------------------------
     AddRoundKey
@@ -210,7 +211,7 @@ addRoundKey st@(State w0 w1 w2 w3 (KeySchedule ks)) =
 rotWord :: Word32 -> Word32
 rotWord w = rotf $ octets w
     where
-        rotf [w0, w1, w2, w3] = fromOctets [w1, w2, w3, w0]
+        rotf (w0, w1, w2, w3) = fromOctets [w1, w2, w3, w0]
 
 rcon :: [Word32]
 rcon =
@@ -228,14 +229,13 @@ newtype KeyWord = KeyWord Word32
 keyExpand :: RawKey -> (KeyLength -> Index -> KeyWord -> Word32 -> Word32)
               -> KeySchedule
 keyExpand raw@(RawKey key) subFunc =
-        KeySchedule $
-            key ++ (expandedKey keyLength (last key) $ keyExpand raw subFunc)
-    where
-        keyLength = length key
-        expandedKey i temp (KeySchedule (k:ks)) =
-            let newTemp =
-                    (subFunc (KeyLength keyLength) (Index i) (KeyWord k) temp)
-            in newTemp : expandedKey (i + 1) newTemp (KeySchedule ks)
+  KeySchedule $
+    key ++ (expandedKey keyLength (last key) $ keyExpand raw subFunc)
+  where
+    keyLength = length key
+    expandedKey i temp (KeySchedule (k:ks)) =
+      let newTemp = (subFunc (KeyLength keyLength) (Index i) (KeyWord k) temp)
+      in  newTemp : expandedKey (i + 1) newTemp (KeySchedule ks)
 
 xorWords :: Word32 -> Word32 -> Word32
 xorWords = gfAdd

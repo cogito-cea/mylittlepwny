@@ -91,7 +91,7 @@ instance HasAesText Ciphertext where
 instance HasAesText State where
   -- | Convert a State to AesText.  The conversion drops the KeySchedule part of State.
   toAesText (State s0 s1 s2 s3 _) =
-    AesText 16 $ octets s0 ++ octets s1 ++ octets s2 ++ octets s3
+    AesText 16 $ octets' s0 ++ octets' s1 ++ octets' s2 ++ octets' s3
 
   -- | a 'State' cannot be imported from text because we cannot define
   -- the 'KeySchedule' data without knowledge of the 'Key' value.  calling
