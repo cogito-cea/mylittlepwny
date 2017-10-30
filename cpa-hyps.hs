@@ -2,11 +2,12 @@
 
 module Main where
 
+import           Data.Monoid         ((<>))
 import           Data.Version        (showVersion)
 import           Options.Applicative
 import qualified Paths_haskell_aes   as V (version)
 import           System.Exit         (exitSuccess)
-import System.Random (randoms, getStdGen)
+import           System.Random       (getStdGen, randoms)
 
 import           Aes
 import           Aes.Hypothesis
