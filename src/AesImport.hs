@@ -77,7 +77,10 @@ instance HasAesText String where
   fromAesText (AesText _ ts) = unwords $ map show ts
 
 instance HasAesText Key where
-  toAesText = error "ERROR. toAesText is not defined for type Key."
+  toAesText (Key128 (RawKey bytes)) = AesText 16 (concat $ map octets' bytes)
+  toAesText (Key192 (RawKey bytes)) = AesText 24 (concat $ map octets' bytes)
+  toAesText (Key256 (RawKey bytes)) = AesText 32 (concat $ map octets' bytes)
+
   -- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
   -- TODO: key :: AesText -> Maybe Key
   fromAesText (AesText 16 bs) = Key128 $ RawKey $ tow32 $ bs
