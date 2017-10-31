@@ -78,7 +78,12 @@ instance HasAesText String where
 
 instance HasAesText Key where
   toAesText = error "ERROR. toAesText is not defined for type Key."
-  fromAesText = key
+  -- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
+  -- TODO: key :: AesText -> Maybe Key
+  fromAesText (AesText 16 bs) = Key128 $ RawKey $ tow32 $ bs
+  fromAesText (AesText 24 bs) = Key192 $ RawKey $ tow32 $ bs
+  fromAesText (AesText 32 bs) = Key256 $ RawKey $ tow32 $ bs
+  fromAesText (AesText n _)   = error $ "unknown key length: " ++ show n
 
 instance HasAesText Plaintext where
   toAesText (Plaintext ts) = AesText (length ts) ts
@@ -123,14 +128,6 @@ toHex :: AesText -> String
 toHex (AesText _ xs) = foldl step "" xs
   where
     step string x = string ++ printf "%02x" x
-
--- | create an AES 'Key'.  Calls 'error' if the input AesText is not correctly sized.
--- TODO: key :: AesText -> Maybe Key
-key :: AesText -> Key
-key (AesText 16 bs) = Key128 $ RawKey $ tow32 $ bs
-key (AesText 24 bs) = Key192 $ RawKey $ tow32 $ bs
-key (AesText 32 bs) = Key256 $ RawKey $ tow32 $ bs
-key (AesText n _)   = error $ "unknown key length: " ++ show n
 
 -- | Convert each group of 4 'Word8's to a 'Word32', following a Big Endian-like representation.
 tow32 :: [Word8] -> [Word32]
