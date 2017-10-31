@@ -59,7 +59,14 @@ test-suite tasty
                   , src
   main-is:          tasty.hs
   other-modules:    Aes.Types
-
+                  , Aes
+                  , Aes.Bits
+                  , Aes.Hypothesis
+                  , Aes.Random
+                  , Aes.Reference
+                  , Aes.Util
+                  , AesImport
+                  , Masking
   build-depends:    haskell-aes
                   , base >= 4 && < 5
                   , containers
