@@ -41,6 +41,7 @@ library
 
 executable cpa-hyps
   main-is:             cpa-hyps.hs
+  other-modules:       Paths_haskell_aes
   build-depends:       base >= 4 && < 5
                      , bytestring
                      , haskell-aes
