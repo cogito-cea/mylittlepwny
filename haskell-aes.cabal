@@ -29,7 +29,7 @@ library
                      , Aes.Util
                      , Aes.Random
                      , Aes.Bits
-  build-depends:       base == 4.9.*
+  build-depends:       base >= 4 && < 5
                      , array >=0.5 && <0.6
                      , bytestring
                      , random
@@ -41,7 +41,7 @@ library
 
 executable cpa-hyps
   main-is:             cpa-hyps.hs
-  build-depends:       base == 4.9.*
+  build-depends:       base >= 4 && < 5
                      , bytestring
                      , haskell-aes
                      , filepath
