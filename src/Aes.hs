@@ -23,9 +23,13 @@ module Aes
   -- * module Aes.Bits
   , bit
   , BitNumber, bitNumber, number
+
+  -- * module Aes.Bytes
+  , bytes
   ) where
 
 import           Aes.Bits
+import           Aes.Bytes
 import           Aes.Random
 import           Aes.Reference
 import           Aes.Types
