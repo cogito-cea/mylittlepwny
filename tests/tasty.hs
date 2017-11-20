@@ -30,6 +30,8 @@ instance Monad m => Serial m PostSubBytesMask where
 instance Monad m => Serial m MixColumnMask where
   series = cons4 MixColumnMask
 
+-- TODO Plaintext has a fixed length, whereas in this instanciation a
+--      plaintext can have any length.
 instance Monad m => Serial m Plaintext where
   series = newtypeCons Plaintext
 
