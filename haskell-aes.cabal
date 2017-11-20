@@ -21,11 +21,13 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Aes
-                     , AesImport
-                     , Masking
                      , Aes.Hypothesis
                      , Aes.Random
+                     , AesImport
+                     , Masking
   other-modules:       Aes.Reference
+                     , Aes.Bits
+                     , Aes.Bytes
                      , Aes.Types
                      , Aes.Util
                      , Aes.Bits
@@ -60,14 +62,7 @@ test-suite tasty
                   , src
   main-is:          tasty.hs
   other-modules:    Aes.Types
-                  , Aes
-                  , Aes.Bits
-                  , Aes.Hypothesis
-                  , Aes.Random
-                  , Aes.Reference
-                  , Aes.Util
-                  , AesImport
-                  , Masking
+
   build-depends:    haskell-aes
                   , base >= 4 && < 5
                   , containers
