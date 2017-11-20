@@ -95,6 +95,16 @@ test-suite doctest
   default-language: Haskell2010
   ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
 
+test-suite criterion
+  type: exitcode-stdio-1.0
+  hs-source-dirs:   tests
+  main-is:          criterion.hs
+  build-depends:    base >=4.9 && <4.10
+                  , haskell-aes
+                  , criterion
+  default-language: Haskell2010
+  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
+
 flag debug
     default: False
     manual: True
