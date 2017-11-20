@@ -15,7 +15,7 @@ import           Data.Word
 import           GHC.Generics                     ()
 
 import           Aes
-import           Aes.Hypothesis                   (firstSBOX)
+import           Aes.Hypothesis                   (firstSBOX, firstRoundSBOX, fstSBOX)
 import           AesImport
 import           Masking
 
@@ -52,6 +52,7 @@ tests = testGroup "Tests" [ unitTests
                           , aesProperties
                           , ieProperties
                           , bitProperties
+                          , hypothesisProperties
                           ]
 
 unitTests :: TestTree
@@ -129,3 +130,17 @@ bitProperties = testGroup "Properties: Aes.Bits"
   -- State. stringImport cannot import a state value.
   ]
 
+hypothesisProperties :: TestTree
+hypothesisProperties = testGroup "Properties: Aes.Hypothesis"
+  [
+    testProperty "Hypothesis: output of the first SBOX" $
+    forAll $ \byte ->
+      fstSBOX byte [0..255] txt == firstRoundSBOX byte txt
+  ]
+  where
+    txt :: Plaintext
+    txt = stringImport "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255"
+
+-- fstSBOX :: Byte -> [Word8] -> Plaintext -> [Word8]
+-- firstRoundSBOX :: Byte -> Plaintext -> [Word8]
+-- firstSBOX :: Key -> Plaintext -> State

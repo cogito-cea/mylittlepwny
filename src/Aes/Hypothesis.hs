@@ -1,10 +1,11 @@
 module Aes.Hypothesis
   where
 
-import           Data.Bits (popCount)
-import           Data.Word (Word8)
+import           Data.Bits     (popCount, xor)
+import           Data.Word     (Word8)
 
 import           Aes
+import           Aes.Reference (subByte)
 import           Aes.Types
 import           Aes.Util
 import           AesImport
@@ -59,6 +60,16 @@ firstRoundSBOX byte t =
   let states = initState' byte t
       firstRound = (subBytes . addRoundKey) <$> states
   in  (getByte byte . toAesText) <$> firstRound
+
+-- TODO comparer les perfs :
+--   - firstSBOX
+--   - firstRoundSBOX
+--   - fstSBOX
+-- TODO  ... puis faire le ménage
+fstSBOX :: Byte -> [Word8] -> Plaintext -> [Word8]
+fstSBOX byte ks txt = (subByte . xor txtbyte) <$> ks
+  where
+    txtbyte = (bytes txt) !! byte
 
 -- | Power model: compute the hamming weight.
 hammingWeight :: [[Word8]] -> [[Int]]
