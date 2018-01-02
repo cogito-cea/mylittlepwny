@@ -16,12 +16,12 @@ evaluations, etc.
          :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
          :END:
 
-******** TODO revoir les arguments de chaque commande (pour tout ce qui n'est pas optionnel)
+******** TODO [#A] revoir les arguments de chaque commande (pour tout ce qui n'est pas optionnel)
     :PROPERTIES:
   :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
   :END:
 
-******** TODO ajouter une commande pour afficher le numéro de version
+******** TODO [#C] ajouter une commande pour afficher le numéro de version
     :PROPERTIES:
   :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
   :END:
@@ -180,3 +180,19 @@ make test
     :PROPERTIES:
   :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
   :END:
+
+* todo notes -- misc
+
+** rendu graphique
+
+*** refs à garder dans un coin
+
+pour support OpenGL :
+http://tobbebex.blogspot.fr/2015/09/gpu-programming-in-haskell-using-gpipe.html
+
+** fixed-length vectors
+
+******** TODO regarder ces deux bibliothèques
+
+- http://hackage.haskell.org/package/vec
+- http://hackage.haskell.org/package/sized-vector
