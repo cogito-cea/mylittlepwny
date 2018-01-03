@@ -1,14 +1,17 @@
+{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Aes.Types
   where
 
+import           Control.DeepSeq
 import           Data.Bits
 import           Data.ByteString.Lazy               (ByteString)
 import           Data.ByteString.Lazy.Builder       (toLazyByteString)
 import           Data.ByteString.Lazy.Builder.ASCII (word8Hex)
 import           Data.List
 import           Data.Word
+import           GHC.Generics                       (Generic)
 import qualified System.Random                      as R
 
 {----------------------------------------------------
@@ -32,7 +35,7 @@ instance R.Random Plaintext where
 
 -- | a Ciphertext is a list of Word8, least significant byte first.
 newtype Ciphertext = Ciphertext [Word8]
-  deriving (Eq, Show)
+  deriving (Eq, Show, Generic, NFData)
 
 cipherToHex :: Ciphertext -> [ByteString]
 cipherToHex (Ciphertext cs) = map (toLazyByteString . word8Hex) cs

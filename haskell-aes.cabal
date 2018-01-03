@@ -34,6 +34,7 @@ library
   build-depends:       base == 4.9.*
                      , array >=0.5 && <0.6
                      , bytestring
+                     , deepseq
                      , random
   default-language:    Haskell2010
   if !flag(debug)
@@ -72,6 +73,7 @@ test-suite tasty
   build-depends:    haskell-aes
                   , base >= 4 && < 5
                   , containers
+                  , deepseq
                   , random
                   , smallcheck == 1.1.*
                   , smallcheck-series
@@ -93,6 +95,17 @@ test-suite doctest
                   , doctest
   default-language: Haskell2010
   ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
+
+benchmark aes
+  type: exitcode-stdio-1.0
+  hs-source-dirs:   benchmarks
+  main-is:          bench-aes.hs
+  build-depends:    haskell-aes
+                  , base >= 4 && < 5
+                  , criterion
+  default-language: Haskell2010
+  ghc-options:      -O2
+                    -Wall -threaded -rtsopts -with-rtsopts=-N
 
 flag debug
     default: False
