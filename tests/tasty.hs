@@ -10,17 +10,18 @@ import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.SmallCheck
 
-import           Data.Bits                        (shiftL, shiftR, xor, (.&.))
+import           Data.Bits                        (xor)
 import           Data.Word
 import           GHC.Generics                     ()
 
 import           Aes
-import           Aes.Hypothesis                   (firstSBOXHyps, firstSBOXHypsPartial)
+import           Aes.Hypothesis                   (firstSBOXHyps,
+                                                   firstSBOXHypsPartial)
 import           AesImport
 import           Masking
 
-import           Aes.Types
 import           Aes.Bits
+import           Aes.Types
 
 instance Monad m => Serial m Mask8 where
   series = newtypeCons Mask8
