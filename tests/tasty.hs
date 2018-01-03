@@ -57,7 +57,6 @@ tests :: TestTree
 tests = testGroup "Tests" [ unitTests
                           , aesProperties
                           , ieProperties
-                          , bitProperties
                           , hypothesisProperties
                           ]
 
@@ -122,18 +121,6 @@ ieProperties = testGroup "Properties: import and export functions"
   , testProperty "identity of importTexts . exportTexts :: Ciphertext" $
     forAll $ \t ->
       stringImport (exportString t) == (t :: Plaintext)
-  ]
-
-bitProperties :: TestTree
-bitProperties = testGroup "Properties: Aes.Bits"
-  [
-    testProperty "Plaintext: function 'bit'" $
-    forAll $ \x bitpos ->
-      let x' = getNonNegative x
-          t = stringImport (show x) :: Plaintext
-      in  (x' `shiftR` (fromEnum bitpos) .&. 0x1) == bit bitpos t
-
-  -- State. stringImport cannot import a state value.
   ]
 
 hypothesisProperties :: TestTree
