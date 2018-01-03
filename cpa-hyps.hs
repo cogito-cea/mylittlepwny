@@ -68,7 +68,7 @@ main = do
       putStrLn "** CPA. compute the hypothetical values after the first SBOX computation **"
       let Size n = size opts
       texts <- take n <$> importTexts f
-      exportHypothesis (output opts) $ hammingWeight $ firstRoundSBOX b <$> texts
+      exportHypothesis (output opts) $ hammingWeight $ firstSBOXHyps' b <$> texts
 
     TTestFR pfile sepfile -> do
       putStrLn "** non-specific t-test. fixed vs. random **"
