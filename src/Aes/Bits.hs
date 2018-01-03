@@ -1,11 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Aes.Bits
-  ( Bit
-  , BitPos
-  , HasBitPos
-  , bit
-  )
   where
 
 -- | Description of bit positions in an integral value. The main
