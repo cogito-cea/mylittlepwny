@@ -9,6 +9,8 @@ module AesImport
 
   , HasAesText(..)
 
+  , stringImport
+  , exportString
   , exportTexts
   , importTexts
 
@@ -41,29 +43,37 @@ instance Monoid AesText where
     AesText (n+n') (t ++ t')
   mconcat = foldr mappend mempty
 
+
+-- | Conversion to and from AesText values.  Many types are supported below.
+--
+--  Signed integers (e.g. Integers) are not supported, because
+--  negative integers do not verify the relation:
+--     (fromAesText . toAesText) x == x
 class HasAesText a where
   toAesText :: a -> AesText
   fromAesText :: AesText -> a
-  -- | Import from Strings. A decimal integer representation is expected.
-  -- >>> stringImport  "00"  :: String
-  -- "0"
-  -- >>> stringImport  ""  :: String
-  -- ""
-  -- >>> stringImport  "0"  :: Key
-  -- *** Exception: unknown key length: 1
-  -- ...
-  -- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"  :: Key
-  -- Key128 (RawKey [66051,67438087,134810123,202182159])
-  -- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23"  :: Key
-  -- Key192 (RawKey [66051,67438087,134810123,202182159,269554195,336926231])
-  -- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31"  :: Key
-  -- Key256 (RawKey [66051,67438087,134810123,202182159,269554195,336926231,404298267,471670303])
-  --
-  stringImport :: String -> a
-  stringImport = fromAesText . toAesText
-  -- | Export to Strings, using a decimal integer textual representation.
-  exportString :: a -> String
-  exportString = fromAesText . toAesText
+
+-- | Import from Strings. A decimal integer representation is expected.
+-- >>> stringImport  "00"  :: String
+-- "0"
+-- >>> stringImport  ""  :: String
+-- ""
+-- >>> stringImport  "0"  :: Key
+-- *** Exception: unknown key length: 1
+-- ...
+-- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15"  :: Key
+-- Key128 (RawKey [66051,67438087,134810123,202182159])
+-- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23"  :: Key
+-- Key192 (RawKey [66051,67438087,134810123,202182159,269554195,336926231])
+-- >>> stringImport  "00 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31"  :: Key
+-- Key256 (RawKey [66051,67438087,134810123,202182159,269554195,336926231,404298267,471670303])
+--
+stringImport :: HasAesText a => String -> a
+stringImport = fromAesText . toAesText
+
+-- | Export to Strings, using a decimal integer textual representation.
+exportString :: HasAesText a => a -> String
+exportString = fromAesText . toAesText
 
 instance HasAesText String where
   -- | create a 'AesText' from a textual string representation.
