@@ -1,39 +1,48 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Aes.Bits
-  ( HasBit
-  , BitNumber
+  ( Bit
+  , BitPos
+  , HasBitPos
   , bit
   )
   where
 
-import           Data.Bits (shiftR, (.&.))
+-- | Description of bit positions in an integral value. The main
+-- purpose of this module is to provide the type 'BitPos' and
+-- associated helpers.
+--
+-- This module is different from 'Data.Bits', which provides bitwise
+-- functions over integral types.
+
+import           Data.Bits (shiftR, (.&.), Bits)
 
 import           Aes.Types
 
 -- | a bit value extracted from Aes input, intermediate or output variables
-type Bit = Int
+newtype Bit = Bit Int
+  deriving (Bits, Eq, Ord, Read, Show, Enum, Num)
 
 -- | The bit position of a bit variable in a bit field.  Bit numbering
 --   starts at 0, form LSB.
-newtype BitNumber = BitNumber Int
-  deriving (Read, Show, Enum)
+newtype BitPos = BitPos Int
+  deriving (Bits, Eq, Ord, Read, Show, Enum, Num)
 
-class HasBit a where
-  bit :: BitNumber -> a -> Bit
+class HasBitPos a where
+  bit :: BitPos -> a -> Bit
 
-instance HasBit Plaintext where
-  bit = bitPt
+instance HasBitPos Plaintext where
+  bit = bitPosPt
 
-instance HasBit State where
-  bit = bitSt
+instance HasBitPos State where
+  bit = bitPosSt
 
 -- | Extract the 'n'th bit of the input data. 'Plaintext' stores
 -- 'Word8' values with the _least_ significant first, i.e.
 -- [p0, p1, p2...].
-bitPt :: BitNumber -> Plaintext -> Bit
-bitPt (BitNumber n) (Plaintext ws)
-  | bytePos >= 0 = fromEnum (reverse ws !! bytePos) `shiftR` r .&. 0x1
+bitPosPt :: BitPos -> Plaintext -> Bit
+bitPosPt (BitPos n) (Plaintext ws)
+  | bytePos >= 0 = Bit $ fromEnum (reverse ws !! bytePos) `shiftR` r .&. 0x1
   | otherwise    = 0
   where l      = length ws
         -- a Plaintext is a list of Word8 values, i.e. a list of 8-bit
@@ -44,9 +53,9 @@ bitPt (BitNumber n) (Plaintext ws)
 
 -- | Extract the 'n'th bit of the input data. 'State' stores
 -- 'Word32' values... in an ankward way.  Actually using a Big Endian thingee.
-bitSt :: BitNumber -> State -> Bit
-bitSt (BitNumber n) (State w0 w1 w2 w3 _)
-  | bytePos >= 0 = fromEnum (ws !! bytePos) `shiftR` r .&. 0x1
+bitPosSt :: BitPos -> State -> Bit
+bitPosSt (BitPos n) (State w0 w1 w2 w3 _)
+  | bytePos >= 0 = toEnum $ fromEnum (ws !! bytePos) `shiftR` r .&. 0x1
   | otherwise    = 0
   where ws = [w3, w2, w1, w0]
         l = length ws

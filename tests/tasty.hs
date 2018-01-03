@@ -20,6 +20,7 @@ import           AesImport
 import           Masking
 
 import           Aes.Types
+import           Aes.Bits
 
 instance Monad m => Serial m Mask8 where
   series = newtypeCons Mask8
@@ -38,13 +39,16 @@ instance Monad m => Serial m Plaintext where
 instance Monad m => Serial m Ciphertext where
   series = newtypeCons Ciphertext
 
-instance Monad m => Serial m BitNumber where
+instance Monad m => Serial m BitPos where
   -- We are interested in integer bit-values up to 256 elements only
   -- (in the case of AES-256), no more.
   --
   -- For negative values on 'n', the generate function will return [].
   series = generate $
            \n -> toEnum <$> if n < 256 then [0..n] else [0..256]
+
+instance Monad m => Serial m Bit where
+  series = newtypeCons Bit
 
 main :: IO ()
 main = defaultMain tests
@@ -124,10 +128,10 @@ bitProperties :: TestTree
 bitProperties = testGroup "Properties: Aes.Bits"
   [
     testProperty "Plaintext: function 'bit'" $
-    forAll $ \x bitnb ->
+    forAll $ \x bitpos ->
       let x' = getNonNegative x
           t = stringImport (show x) :: Plaintext
-      in  x' `shiftR` fromEnum bitnb .&. 0x1 == bit bitnb t
+      in  (x' `shiftR` (fromEnum bitpos) .&. 0x1) == bit bitpos t
 
   -- State. stringImport cannot import a state value.
   ]

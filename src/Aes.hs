@@ -22,7 +22,9 @@ module Aes
 
   -- * module Aes.Bits
   , bit
-  , BitNumber
+  , Bit
+  , BitPos
+  , HasBitPos
 
   -- * module Aes.Bytes
   , bytes

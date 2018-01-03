@@ -36,7 +36,7 @@ data Command
             , sprtFile :: !FilePath
             }
   | TTestRR { keyFile  :: !FilePath
-            , bitnb    :: !BitNumber
+            , bitnb    :: !BitPos
             , textFile :: !FilePath
             , sprtFile :: !FilePath
             , ciphFile :: Maybe FilePath
