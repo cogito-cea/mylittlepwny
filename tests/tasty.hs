@@ -109,12 +109,18 @@ aesProperties = testGroup "Properties: first order masking scheme"
 
 ieProperties :: TestTree
 ieProperties = testGroup "Properties: import and export functions"
-  [ testProperty "identity of fromAesText . toAesText :: Plaintext" $
+  [ testProperty "Conservation of values through AesText conversions :: Plaintext" $
     forAll $ \x ->
       (fromAesText . toAesText) x == (x :: Plaintext)
-  , testProperty "identity of fromAesText . toAesText :: Ciphertext" $
+  , testProperty "Conservation of values through AesText conversions :: Ciphertext" $
     forAll $ \x ->
       (fromAesText . toAesText) x == (x :: Ciphertext)
+  -- String is difficult to test because one would need to craft ad
+  -- hoc String values.  Another option is to do the conversion
+  -- AesText -> String -> AesText.
+  , testProperty "Conservation of values through AesText conversions :: Word" $
+    forAll $ \x ->
+      (fromAesText . toAesText) x == (x :: Word)
   , testProperty "identity of importTexts . exportTexts :: Plaintext" $
     forAll $ \t ->
       stringImport (exportString t) == (t :: Plaintext)
@@ -128,12 +134,12 @@ hypothesisProperties = testGroup "Properties: Aes.Hypothesis"
   [
     testProperty "Hypothesis: output of the first SBOX" $
     forAll $ \byte ->
-      firstSBOXHyps byte txt == firstSBOXHypsPartial byte [0..255] txt
+      -- TODO.  we could use NonNegative instances, but I didn't take
+      -- time to look at this.  Hence we use a workaround here with
+      -- Word8 instances, i.e. unsigned integers in [0..255].
+      let wbyte = fromIntegral (byte::Word8)
+      in firstSBOXHyps wbyte txt == firstSBOXHypsPartial wbyte [0..255] txt
   ]
   where
     txt :: Plaintext
     txt = stringImport "0 17 34 51 68 85 102 119 136 153 170 187 204 221 238 255"
-
--- fstSBOX :: Byte -> [Word8] -> Plaintext -> [Word8]
--- firstRoundSBOX :: Byte -> Plaintext -> [Word8]
--- firstSBOX :: Key -> Plaintext -> State

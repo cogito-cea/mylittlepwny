@@ -17,10 +17,12 @@ module AesImport
   , toHex
   ) where
 
-import qualified Data.ByteString       as B
-import           Data.List             (foldl')
+import           Data.Bits       (shiftL, (.|.))
+import qualified Data.ByteString as B
+import           Data.List       (foldl')
+import           Data.Monoid     ((<>))
 import           Data.Word
-import           Text.Printf           (printf)
+import           Text.Printf     (printf)
 
 import           Aes.Types
 
@@ -86,6 +88,15 @@ instance HasAesText String where
       step x t = mappend x (AesText 1 [read t])
   -- | Create a textual 'String' representation from a 'AesText'.
   fromAesText (AesText _ ts) = unwords $ map show ts
+
+-- | Conversion of unsigned integers.
+instance HasAesText Word where
+  toAesText 0 = AesText 0 []
+  toAesText n = let (q, r) = quotRem n $ 1 + fromIntegral (maxBound::Word8)
+                in  (AesText 1 [fromIntegral r]) <> (toAesText q)
+  fromAesText (AesText _ ws) =
+    let shiftOp l b = (l `shiftL` 8) .|. (fromIntegral b)
+    in  foldl' shiftOp 0 ws
 
 instance HasAesText B.ByteString where
   toAesText bs = AesText (B.length bs) (B.unpack bs)
