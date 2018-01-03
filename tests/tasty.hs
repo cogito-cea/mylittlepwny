@@ -44,7 +44,7 @@ instance Monad m => Serial m BitNumber where
   --
   -- For negative values on 'n', the generate function will return [].
   series = generate $
-           \n -> bitNumber <$> if n < 256 then [0..n] else [0..256]
+           \n -> toEnum <$> if n < 256 then [0..n] else [0..256]
 
 main :: IO ()
 main = defaultMain tests
@@ -127,7 +127,7 @@ bitProperties = testGroup "Properties: Aes.Bits"
     forAll $ \x bitnb ->
       let x' = getNonNegative x
           t = stringImport (show x) :: Plaintext
-      in  x' `shiftR` number bitnb .&. 0x1 == bit bitnb t
+      in  x' `shiftR` fromEnum bitnb .&. 0x1 == bit bitnb t
 
   -- State. stringImport cannot import a state value.
   ]

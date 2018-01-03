@@ -243,7 +243,7 @@ main = do
         <> help "the input key file"
       )
     bitOpt =
-      ( bitNumber <$> option auto
+      ( toEnum <$> option auto
         ( long "bit-number"
           <> short 'b'
           <> metavar "BIT_NUMBER"

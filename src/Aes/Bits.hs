@@ -3,8 +3,6 @@
 module Aes.Bits
   ( HasBit
   , BitNumber
-  , bitNumber
-  , number
   , bit
   )
   where
@@ -19,15 +17,7 @@ type Bit = Int
 -- | The bit position of a bit variable in a bit field.  Bit numbering
 --   starts at 0, form LSB.
 newtype BitNumber = BitNumber Int
-  deriving (Read, Show, Num)
-
-bitNumber :: Int -> BitNumber
-bitNumber n
-  | n >= 0    = BitNumber n
-  | otherwise = error $ "Error.  Unsupported argument value for function 'bitNumber'"
-
-number :: BitNumber -> Int
-number (BitNumber b) = b
+  deriving (Read, Show, Enum)
 
 class HasBit a where
   bit :: BitNumber -> a -> Bit
