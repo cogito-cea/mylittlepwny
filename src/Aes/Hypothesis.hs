@@ -71,6 +71,11 @@ fstSBOX byte ks txt = (subByte . xor txtbyte) <$> ks
   where
     txtbyte = (bytes txt) !! byte
 
+fstSBOX' :: Byte -> Word8 -> [Plaintext] -> [Word8]
+fstSBOX' byte k txts = [subByte $ xor b k | b <- txtbyte]
+  where
+    txtbyte = [(bytes txt) !! byte | txt <- txts]
+
 -- | Power model: compute the hamming weight.
 hammingWeight :: [[Word8]] -> [[Int]]
 hammingWeight = (fmap.fmap) popCount

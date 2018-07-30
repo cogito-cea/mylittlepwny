@@ -89,6 +89,7 @@ test-suite tasty
   main-is:          tasty.hs
   other-modules:    Aes
                   , Aes.Bits
+                  , Aes.Bytes
                   , Aes.Hypothesis
                   , Aes.Random
                   , Aes.Reference

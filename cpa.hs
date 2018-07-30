@@ -44,26 +44,6 @@ main :: IO ()
 main = do
   opts <- execParser optInfo
 
-  let byteNb = 0
-  let corrNb = 256 :: Int -- compute the 256 possible key hypothesis
-
-  -- the value of the secret key
-  let key = stringImport  "0X01 0X23 0X45 0X67 0X89 0XAB 0XCD 0XEF 0X12 0X34 0X56 0X78 0X9A 0XBC 0XDE 0XF0" :: Key
-
-  let keyrange = [0..(corrNb - 1)]
-      secretByte = fromIntegral $ getByte byteNb $ toAesText key
-      -- Do not compute the correlation twice for the true key
-      -- hypothesis.  Furthermore, we move the true key hypothesis at
-      -- the end of our list because of constraints on the way the
-      -- display is handled; see functions makePicture and
-      -- handleEvent.
-      dontcomputetwicethetruekey = delete secretByte keyrange
-      keyHyps = fromIntegral <$> (dontcomputetwicethetruekey ++ [secretByte])
-      nbCorrTracesButKey = length dontcomputetwicethetruekey
-
-  let keyHypothesisAS = keyHyps
-
-
   -- calcul sur toutes les traces, pour une seule hypothèse de clé seulement, sur l'octet 0
   -- calcul de la longueur des traces
   tmax' <- case tmax opts of
@@ -77,7 +57,7 @@ main = do
   let tmin' = tmin opts
       len   = tmax' - tmin'
       nsize' = nsize opts
-  ts <- map trace <$> forM [(1::Int)..nsize'] (\_ -> tracesLoad' h tmin' len) :: IO [U.Vector Float]
+  traces <- map trace <$> forM [(0::Int)..(nsize'-1)] (\i -> tracesLoadIndexed' h i tmin' len) :: IO [U.Vector Float]
   tracesClose h
 
   -- calcul des hypothèses de clé
@@ -92,24 +72,41 @@ main = do
   let textfile = fromMaybe ((tracesDir opts) </> "plaintexts.txt") (textFile opts)
   texts <- importTexts textfile :: IO [Plaintext]
 
-  let secretByte = fromIntegral $ getByte (byte opts) $ toAesText key
-      hyps = map (fromIntegral . head . fstSBOX (byte opts) [secretByte]) texts
+  -- the key hypothesis
+
+  let keyrange = [0..255]
+      secretByte = fromIntegral $ getByte (byte opts) $ toAesText key
+      -- Do not compute the correlation twice for the true key
+      -- hypothesis.  Furthermore, we move the true key hypothesis at
+      -- the end of our list because of constraints on the way the
+      -- display is handled; see functions makePicture and
+      -- handleEvent.
+      others = delete secretByte keyrange
+
+      txts = take nsize' texts
+      hyps' = [ fstSBOX' (byte opts) k txts | k <- (secretByte : others)]
+      hyps = [map fromIntegral h | h <- hyps']
+      -- hyps :: [[Float]]
+  print "len hyps': {}\n" [length hyps']
+  print "len hyps: {}\n" [length hyps]
+  print "len head hyps: {}\n" [length $ head hyps]
 
   -- calcul des correlations
-  let cs =  flip run pearsonUx $ zip ts hyps
-      abscs = U.map abs cs
+  let cs = [ flip run pearsonUx $ zip traces h | h <- hyps ]
+  --     abscs = [ U.map abs c | c <- cs ]
 
-  print "Max correlation value (abs) : {}  \n"     [U.maximum abscs]
-  print "Max correlation found for sample #{}  \n" [U.maxIndex abscs]
+  -- print "Max correlation value (abs) : {} {} \n"     [U.maximum a | a <- abscs]
+  -- print "Max correlation found for sample #{} {}  \n" [U.maxIndex a | a <- abscs]
 
   -- tracé des courbes CPA
   let graphFile = printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
-  putStrLn ""
-  print "Rendering the CPA plot in: {}\n" [graphFile]
+  print "\nRendering the CPA plot in: {}\n" [graphFile]
+  let dataplot = [ zip [(1::Float)..10000] $ U.toList c | c <- cs ]
   toFile def graphFile $ do
     layout_title .= "Pearson's correlation coefficient"
-    setColors [opaque blue, opaque red]
-    plot (line "correlation" $ [zip [(1::Float)..10000] $ U.toList cs])
+    setColors [ opaque grey, opaque black]
+    plot (line "correlation" $ tail dataplot)
+    plot (line "correlation" $ [head dataplot])
 
 test :: (Num a, U.Unbox a) => (a -> a -> a) -> [U.Vector a] -> [U.Vector a] -> [[a]]
 test f ts ks = [ [ U.sum $ U.zipWith f t k | t <- ts] | k <- ks]
@@ -118,33 +115,6 @@ test f ts ks = [ [ U.sum $ U.zipWith f t k | t <- ts] | k <- ks]
   --   do
   --     t <- ts
   --     U.sum $ U.zipWith f t k
-
-
--- stepCorr :: TraceHandle -> Byte -> [Word8] -> Plaintext -> IO () -- TODO return type
--- stepCorr trace byteNb kh txt = do
---   -- the key hypothesis
---   let hyps = fromIntegral <$> fstSBOX byteNb kh txt
-
---   -- compute the Pearson correlation, and return the new correlation state
---   let s' = mapP (pearson <$> hyps <*> (float2Double <$> trace)) pstate
-
---   -- extract the correlation values
---   let rs = map (double2Float . fst) s'
-
---   -- split into several lists, one for each key hypothesis
---   let ls = chunksOf tsize $ zip ( fmap ( fromIntegral      -- convert to floats
---                                          . (+ tmin)        -- add an offset of tmin
---                                          . flip rem tsize  -- restart at index 0 every tsize
---                                        ) [0..]             -- a list of indices, starting a 0
---                                 ) rs
---   -- print the max correlation value
---   print $ maximum $ map (abs . snd) $ last ls
-
---   -- correlation curves for all the key hypothesis
---   --   the last Line of the list is associated to the true key.
---   let corrs = Line <$> ls
-
---   return s'
 
 
 
