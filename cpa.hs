@@ -99,7 +99,8 @@ main = do
   -- print "Max correlation found for sample #{} {}  \n" [U.maxIndex a | a <- abscs]
 
   -- tracé des courbes CPA
-  let graphFile = printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
+  let graphFile = tracesDir opts
+                  </> printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
   print "\nRendering the CPA plot in: {}\n" [graphFile]
   let dataplot = [ zip [(1::Float)..10000] $ U.toList c | c <- cs ]
   toFile def graphFile $ do
