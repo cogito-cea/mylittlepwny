@@ -74,40 +74,33 @@ main = do
 
   -- the key hypothesis
 
-  let keyrange = [0..255]
-      secretByte = fromIntegral $ getByte (byte opts) $ toAesText key
-      -- Do not compute the correlation twice for the true key
-      -- hypothesis.  Furthermore, we move the true key hypothesis at
-      -- the end of our list because of constraints on the way the
-      -- display is handled; see functions makePicture and
-      -- handleEvent.
-      others = delete secretByte keyrange
-
+  let keyHyps = [0..255]
+      secret = fromIntegral $ getByte (byte opts) $ toAesText key
       txts = take nsize' texts
-      hyps' = [ fstSBOX' (byte opts) k txts | k <- (secretByte : others)]
+      hyps' = [ fstSBOX' (byte opts) k txts | k <- keyHyps]
       hyps = [map fromIntegral h | h <- hyps']
-      -- hyps :: [[Float]]
-  print "len hyps': {}\n" [length hyps']
-  print "len hyps: {}\n" [length hyps]
-  print "len head hyps: {}\n" [length $ head hyps]
 
   -- calcul des correlations
   let cs = [ flip run pearsonUx $ zip traces h | h <- hyps ]
-  --     abscs = [ U.map abs c | c <- cs ]
+      abscs = [ U.map abs c | c <- cs ]
+      maxs = U.fromList [ U.maximum x | x <- abscs ]
 
-  -- print "Max correlation value (abs) : {} {} \n"     [U.maximum a | a <- abscs]
-  -- print "Max correlation found for sample #{} {}  \n" [U.maxIndex a | a <- abscs]
+  print "Max correlation value: {} \n" [U.maximum maxs]
+  print "   found for key byte #{} \n" [U.maxIndex maxs]
 
   -- tracé des courbes CPA
   let graphFile = tracesDir opts
                   </> printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
   print "\nRendering the CPA plot in: {}\n" [graphFile]
-  let dataplot = [ zip [(1::Float)..10000] $ U.toList c | c <- cs ]
+  let datahyps = [ zip [(1::Float)..10000] $ U.toList c | c <- deleteAt secret cs ]
+  let datasecret = [ zip [(1::Float)..10000] $ U.toList $ cs !! secret]
+
+  -- TODO fix axe abscisse si tmin != 0
   toFile def graphFile $ do
     layout_title .= "Pearson's correlation coefficient"
     setColors [ opaque grey, opaque black]
-    plot (line "correlation" $ tail dataplot)
-    plot (line "correlation" $ [head dataplot])
+    plot $ line "correlation" $ datahyps
+    plot $ line "correlation" $ datasecret
 
 test :: (Num a, U.Unbox a) => (a -> a -> a) -> [U.Vector a] -> [U.Vector a] -> [[a]]
 test f ts ks = [ [ U.sum $ U.zipWith f t k | t <- ts] | k <- ks]
@@ -125,7 +118,7 @@ newtype Trace a = Trace { trace :: U.Vector a
 
 data TraceHandle = TraceHandle
   { tracedir :: FilePath
-  , counter  :: IORef Int
+  , counter  :: IORef Int -- TODO delete this
   }
 
 tracesInit :: FilePath -> IO TraceHandle
@@ -270,3 +263,10 @@ optInfo = info
 -- | show version info
 showVersion :: String
 showVersion = V.showVersion version
+
+-- * misc utils
+-- | Delete element at index 'n' from the list.
+--   This function is not safe if index 'n' is greater than the length of the input list.
+deleteAt :: Int -> [a] -> [a]
+deleteAt n xs = let (ys, zs) = splitAt n xs
+                in  ys ++ tail zs
