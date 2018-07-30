@@ -70,14 +70,14 @@ main = do
     Just t -> return t
     Nothing -> do
       t <- bracket (tracesInit $ tracesDir opts) tracesClose tracesLoad :: IO (Trace Int)
-      return $ length $ trace t
+      return $ U.length $ trace t
 
   -- import des traces
   h <- tracesInit $ tracesDir opts
   let tmin' = tmin opts
       len   = tmax' - tmin'
       nsize' = nsize opts
-  ts <- map trace <$> forM [(1::Int)..nsize'] (\_ -> tracesLoad' h tmin' len) :: IO [[Double]]
+  ts <- map trace <$> forM [(1::Int)..nsize'] (\_ -> tracesLoad' h tmin' len) :: IO [U.Vector Float]
   tracesClose h
 
   -- calcul des hypothèses de clé
@@ -96,17 +96,11 @@ main = do
       hyps = map (fromIntegral . head . fstSBOX (byte opts) [secretByte]) texts
 
   -- calcul des correlations
-  let transpose :: [[a]] -> [[a]]
-      transpose ([]:_) = []
-      transpose x = (map head x) : transpose (map tail x)
-  let pass :: [[Double]] ->  [Double] -> [Double]
-      pass [] h = []
-      pass (t:ts) h = (S.correlation $ U.fromList $ zip t h) : pass ts h
-  let cs = pass (transpose ts) hyps
-      abscs = map abs cs
+  let cs =  flip run pearsonUx $ zip ts hyps
+      abscs = U.map abs cs
 
-  -- print "Max correlation value (abs) : {}  \n"     [U.maximum abscs]
-  -- print "Max correlation found for sample #{}  \n" [U.maxIndex abscs]
+  print "Max correlation value (abs) : {}  \n"     [U.maximum abscs]
+  print "Max correlation found for sample #{}  \n" [U.maxIndex abscs]
 
   -- tracé des courbes CPA
   let graphFile = printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
@@ -115,7 +109,7 @@ main = do
   toFile def graphFile $ do
     layout_title .= "Pearson's correlation coefficient"
     setColors [opaque blue, opaque red]
-    plot (line "correlation" $ [zip [(1::Double)..10000] $ cs])
+    plot (line "correlation" $ [zip [(1::Float)..10000] $ U.toList cs])
 
 test :: (Num a, U.Unbox a) => (a -> a -> a) -> [U.Vector a] -> [U.Vector a] -> [[a]]
 test f ts ks = [ [ U.sum $ U.zipWith f t k | t <- ts] | k <- ks]
@@ -155,7 +149,7 @@ test f ts ks = [ [ U.sum $ U.zipWith f t k | t <- ts] | k <- ks]
 
 
 -- * Traces
-newtype Trace a = Trace { trace :: [a]
+newtype Trace a = Trace { trace :: U.Vector a
                         } deriving (Show)
 
 data TraceHandle = TraceHandle
@@ -189,7 +183,7 @@ tracesLoadIndexed :: (Read a, U.Unbox a) => TraceHandle -> Int -> IO (Trace a)
 tracesLoadIndexed (TraceHandle d _) i = do
   -- s <- readFile $ d </> (show $ format "trace_{}.txt" [ left 9 '0' i ])
   s <- readFile $ d </> printf "trace_%09d.txt" i
-  return $ Trace $ map read $ takeWhile (not . null) $ splitOn " " s
+  return $ Trace $ U.fromList $ map read $ takeWhile (not . null) $ splitOn " " s
 tracesLoadIndexed' :: (Read a, U.Unbox a) => TraceHandle
                                           -> Int
                                           -> Int
@@ -197,7 +191,8 @@ tracesLoadIndexed' :: (Read a, U.Unbox a) => TraceHandle
                                           -> IO (Trace a)
 tracesLoadIndexed' (TraceHandle d _) i tmin len = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
-  return $ Trace $ take len $ drop tmin
+  return $ Trace $ U.fromList
+                 $ take len $ drop tmin
                  $ map read $ takeWhile (not . null) $ splitOn " " s
 
 tracesClose :: TraceHandle -> IO ()
