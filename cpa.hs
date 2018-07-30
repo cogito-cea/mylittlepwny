@@ -1,4 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveFunctor              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
 
 -- import for Traces
 import           Data.IORef
@@ -8,14 +10,20 @@ import           System.FilePath.Posix                  ((</>))
 -- CPA
 import           Prelude                                hiding (print)
 
+import           Control.Exception                      (bracket)
 import           Control.Monad
 import           Data.List                              (delete)
+import           Data.Maybe                             (fromMaybe)
+import           Data.Monoid                            ((<>))
 import           Data.Text.Format
 import qualified Data.Vector.Unboxed                    as U
+import qualified Data.Version                           as V (showVersion)
 import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
+import           Options.Applicative
+import           Paths_haskell_aes                      (version)
 import qualified Statistics.Sample                      as S
-import           Text.Printf           (printf)
+import           Text.Printf                            (printf)
 
 
 import           Aes
@@ -34,7 +42,8 @@ import           Folds
 
 main :: IO ()
 main = do
-  let tracesDir = "../traces"
+  opts <- execParser optInfo
+
   let byteNb = 0
   let corrNb = 256 :: Int -- compute the 256 possible key hypothesis
 
@@ -56,16 +65,35 @@ main = do
 
 
   -- calcul sur toutes les traces, pour une seule hypothèse de clé seulement, sur l'octet 0
+  -- calcul de la longueur des traces
+  tmax' <- case tmax opts of
+    Just t -> return t
+    Nothing -> do
+      t <- bracket (tracesInit $ tracesDir opts) tracesClose tracesLoad :: IO (Trace Int)
+      return $ U.length $ trace t
+
   -- import des traces
-  h <- tracesInit tracesDir
-  ts <- map trace <$> forM [(1::Int)..200] (\_ -> tracesLoad h) :: IO [U.Vector Float]
+  h <- tracesInit $ tracesDir opts
+  let tmin' = tmin opts
+      len   = tmax' - tmin'
+      nsize' = nsize opts
+  ts <- map trace <$> forM [(1::Int)..nsize'] (\_ -> tracesLoad' h tmin' len) :: IO [U.Vector Float]
   tracesClose h
 
   -- calcul des hypothèses de clé
   -- TODO seulement sur la première clé pour l'instant
-  let textfile = tracesDir </> "plaintexts.txt"
+  keys <- case keyFile opts of
+            Nothing -> return [stringImport  "0X01 0X23 0X45 0X67 0X89 0XAB 0XCD 0XEF 0X12 0X34 0X56 0X78 0X9A 0XBC 0XDE 0XF0"]
+            Just f  -> importTexts f
+  let key = case keys of
+        [k] -> k :: Key
+        _   -> error "Error.  Found more than one key value in the keyFile"
+
+  let textfile = fromMaybe ((tracesDir opts) </> "plaintexts.txt") (textFile opts)
   texts <- importTexts textfile :: IO [Plaintext]
-  let hyps = map (fromIntegral . head . fstSBOX 0 [1]) texts
+
+  let secretByte = fromIntegral $ getByte (byte opts) $ toAesText key
+      hyps = map (fromIntegral . head . fstSBOX (byte opts) [secretByte]) texts
 
   -- calcul des correlations
   let cs =  flip run pearsonUx $ zip ts hyps
@@ -75,7 +103,10 @@ main = do
   print "Max correlation found for sample #{}  \n" [U.maxIndex abscs]
 
   -- tracé des courbes CPA
-  toFile def "example1_big.png" $ do
+  let graphFile = printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
+  putStrLn ""
+  print "Rendering the CPA plot in: {}\n" [graphFile]
+  toFile def graphFile $ do
     layout_title .= "Pearson's correlation coefficient"
     setColors [opaque blue, opaque red]
     plot (line "correlation" $ [zip [(1::Float)..10000] $ U.toList cs])
@@ -132,16 +163,37 @@ tracesInit d = TraceHandle d <$> newIORef 0
 -- | Load a new trace.
 tracesLoad :: (Read a, U.Unbox a) => TraceHandle -> IO (Trace a)
 tracesLoad h@(TraceHandle _ n) = do
-  t <- readIORef n >>= tracesLoad' h
+  t <- readIORef n >>= tracesLoadIndexed h
+  modifyIORef' n (+1)
+  return t
+
+-- | Load a new trace, filter samples out of the window of interest
+tracesLoad' :: (Read a, U.Unbox a) => TraceHandle  -- ^ the trace handle
+                                   -> Int          -- ^ tmin.  index of the first sample
+                                   -> Int          -- ^ tmax.  size of the sample window
+                                   -> IO (Trace a) -- ^ the loaded trace
+tracesLoad' h@(TraceHandle _ n) tmin len = do
+  x <- readIORef n
+  t <- tracesLoadIndexed' h x tmin len
   modifyIORef' n (+1)
   return t
 
 -- | Load a specific trace.
-tracesLoad' :: (Read a, U.Unbox a) => TraceHandle -> Int -> IO (Trace a)
-tracesLoad' (TraceHandle d _) i = do
+tracesLoadIndexed :: (Read a, U.Unbox a) => TraceHandle -> Int -> IO (Trace a)
+tracesLoadIndexed (TraceHandle d _) i = do
   -- s <- readFile $ d </> (show $ format "trace_{}.txt" [ left 9 '0' i ])
   s <- readFile $ d </> printf "trace_%09d.txt" i
   return $ Trace $ U.fromList $ map read $ takeWhile (not . null) $ splitOn " " s
+tracesLoadIndexed' :: (Read a, U.Unbox a) => TraceHandle
+                                          -> Int
+                                          -> Int
+                                          -> Int
+                                          -> IO (Trace a)
+tracesLoadIndexed' (TraceHandle d _) i tmin len = do
+  s <- readFile $ d </> printf "trace_%09d.txt" i
+  return $ Trace $ U.fromList
+                 $ take len $ drop tmin
+                 $ map read $ takeWhile (not . null) $ splitOn " " s
 
 tracesClose :: TraceHandle -> IO ()
 tracesClose _ = return ()
@@ -177,3 +229,73 @@ ts :: [Trace Float]
 
 
 -}
+
+
+-- * CLI options
+data AppOptions = AppOptions
+  { -- cmd        :: !Command
+    tracesDir :: FilePath
+  , textFile  :: !(Maybe FilePath)
+  , keyFile   :: !(Maybe FilePath)
+  , byte      :: !Int
+  , nsize     :: Int        -- ^ number of traces used for the CPA analysis
+  , tmin      :: Int        -- ^ the number of the first sample used
+  , tmax      :: Maybe Int  -- ^ the number of the latest sample used
+  } deriving (Show)
+
+-- | read program options
+optParser :: Parser AppOptions
+optParser = AppOptions
+  <$> strArgument
+  ( metavar "TRACES_DIR"
+    <> help "Location of the traces files"
+  )
+  <*> optional ( strOption
+                 ( long "textfile" <> short 't'
+                   <> metavar "TEXTFILE"
+                   <> help "Location of the plaintexts file  [default: TRACES_DIR/plaintexts.txt]"
+                 )
+               )
+  <*> optional ( strOption
+                 ( long "keyfile" <> short 'k'
+                   <> metavar "KEYFILE"
+                   <> help "Location of the key file"
+                 )
+               )
+  <*> option (fromInteger <$> auto)
+  ( long "byte" <> short 'b'
+    <> metavar "BYTE"
+    <> help "Number of the key byte to attack [default: 0]"
+    <> value 0
+  )
+  <*> option (fromInteger <$> auto)
+  ( long "nsize" <> short 'n'
+    <> metavar "NSIWE"
+    <> help "Number of traces used for the CPA analysis [default: 512]"
+    <> value 512
+  )
+  <*> option (fromInteger <$> auto)
+  ( long "tmin"
+    <> metavar "TMIN"
+    <> help "Sample number for the start of the observation window [default: 0]."
+    <> value 0
+  )
+  <*> optional ( option (fromInteger <$> auto)
+                 ( long "tmax"
+                   <> metavar "TMAX"
+                   <> help "Sample number for the end of the observation window [default: full trace length]."
+                 )
+               )
+
+optInfo :: ParserInfo AppOptions
+optInfo = info
+          ( helper <*> versionOption <*> optParser )
+          ( fullDesc
+            <> progDesc "CPA from on-disk traces"
+          )
+  where
+    versionOption = infoOption showVersion (long "version" <> help "Show version")
+
+-- | show version info
+showVersion :: String
+showVersion = V.showVersion version

@@ -61,6 +61,7 @@ executable cpa-hyps
 
 executable cpa
   main-is:             cpa.hs
+  other-modules:       Paths_haskell_aes
   build-depends:       base >= 4 && < 5
                      , Chart
                      , Chart-cairo
