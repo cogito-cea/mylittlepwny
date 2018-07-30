@@ -12,7 +12,6 @@ import           Prelude                                hiding (print)
 
 import           Control.Exception                      (bracket)
 import           Control.Monad
-import           Data.List                              (delete)
 import           Data.Maybe                             (fromMaybe)
 import           Data.Monoid                            ((<>))
 import           Data.Text.Format
@@ -22,7 +21,6 @@ import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
 import           Options.Applicative
 import           Paths_haskell_aes                      (version)
-import qualified Statistics.Sample                      as S
 import           Text.Printf                            (printf)
 
 
@@ -30,15 +28,6 @@ import           Aes
 import           Aes.Hypothesis
 import           AesImport
 import           Folds
-
--- statisticsSample :: StatsResults
--- statisticsSample =
---   ( SS.mean $ U.fromList x
---   , SS.mean $ U.fromList y
---   , SS.stdDev $ U.fromList x
---   , SS.stdDev $ U.fromList y
---   , SS.correlation $ U.fromList $ zip x y
---   )
 
 main :: IO ()
 main = do
@@ -73,7 +62,6 @@ main = do
   texts <- importTexts textfile :: IO [Plaintext]
 
   -- the key hypothesis
-
   let keyHyps = [0..255]
       secret = fromIntegral $ getByte (byte opts) $ toAesText key
       txts = take nsize' texts
@@ -102,15 +90,6 @@ main = do
     plot $ line "correlation" $ datahyps
     plot $ line "correlation" $ datasecret
 
-test :: (Num a, U.Unbox a) => (a -> a -> a) -> [U.Vector a] -> [U.Vector a] -> [[a]]
-test f ts ks = [ [ U.sum $ U.zipWith f t k | t <- ts] | k <- ks]
-  -- do
-  --   k <- ks
-  --   do
-  --     t <- ts
-  --     U.sum $ U.zipWith f t k
-
-
 
 -- * Traces
 newtype Trace a = Trace { trace :: U.Vector a
@@ -134,11 +113,11 @@ tracesLoad h@(TraceHandle _ n) = do
 -- | Load a new trace, filter samples out of the window of interest
 tracesLoad' :: (Read a, U.Unbox a) => TraceHandle  -- ^ the trace handle
                                    -> Int          -- ^ tmin.  index of the first sample
-                                   -> Int          -- ^ tmax.  size of the sample window
+                                   -> Int          -- ^ len.  size of the sample window
                                    -> IO (Trace a) -- ^ the loaded trace
-tracesLoad' h@(TraceHandle _ n) tmin len = do
+tracesLoad' h@(TraceHandle _ n) m l = do
   x <- readIORef n
-  t <- tracesLoadIndexed' h x tmin len
+  t <- tracesLoadIndexed' h x m l
   modifyIORef' n (+1)
   return t
 
@@ -149,50 +128,18 @@ tracesLoadIndexed (TraceHandle d _) i = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
   return $ Trace $ U.fromList $ map read $ takeWhile (not . null) $ splitOn " " s
 tracesLoadIndexed' :: (Read a, U.Unbox a) => TraceHandle
-                                          -> Int
-                                          -> Int
-                                          -> Int
+                                          -> Int  -- ^ the trace number
+                                          -> Int  -- ^ tmin. index of the first sample
+                                          -> Int  -- ^ len.  size of the sample window
                                           -> IO (Trace a)
-tracesLoadIndexed' (TraceHandle d _) i tmin len = do
+tracesLoadIndexed' (TraceHandle d _) i m l = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
   return $ Trace $ U.fromList
-                 $ take len $ drop tmin
+                 $ take l $ drop m
                  $ map read $ takeWhile (not . null) $ splitOn " " s
 
 tracesClose :: TraceHandle -> IO ()
 tracesClose _ = return ()
-
-
-{-|
->>> :t flip run pearsonUx
-flip run pearsonUx
-  :: (Data.Vector.Unboxed.Base.Unbox a, Floating a, Foldable t) =>
-     t (Data.Vector.Unboxed.Base.Vector a, a)
-     -> Data.Vector.Unboxed.Base.Vector a
->>> import qualified Data.Vector.Unboxed as U
->>> let ks = [1,1,2,3]
->>> let xs = [ U.fromList [0,1,0,0,0], U.fromList [1,1,1,1,1], U.fromList [0,2,1,1,1], U.fromList [0,3,0,0.5,0]]
->>> flip run pearsonUx $ zip xs ks
-[-0.2842676218074806,0.8771649338308385,-5.504818825631798e-2,0.34510571758123426,-5.504818825631798e-2]
-
-
-
--- loading traces
-
->>> ts <- take 100 . repeat <$> tracesLoad h :: IO ([Trace Float])
->>> :t ts
-ts :: [Trace Float]
->>> length ts
-100
-
-
->>> let textfile = tracesDir </> "plaintexts.txt"
->>> texts <- importTexts textfile :: IO [Plaintext]
-
->>> let hyps = map (head . fstSBOX 0 [0]) texts
-
-
--}
 
 
 -- * CLI options
