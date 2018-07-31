@@ -272,21 +272,6 @@ pearsonUx = L' done step begin
     done (PSUx _ _ _ sxx sxy syy) =
       U.zipWith (/) sxy $ U.map (\x -> sqrt (x * syy)) sxx -- TODO fuse maps
 {-# INLINABLE pearsonUx #-}
-{-
-n = 0
-xbar = 0, ybar = 0
-sxx = 0, sxy = 0, syy = 0
-repeat
-read x, y
-n = n + 1
-devx = x - xbar, devy = y - ybar
-xbar = xbar + devx/n, ybar = ybar + devy/n
-sxx = sxx + devx*(x - xbar)
-sxy = sxy + devx*(y - ybar)
-syy = syy + devy*(y - ybar)
-until end of data
--}
-
 
 pearsonLL :: (Floating a) => L' ([a], [a]) ([a])
 pearsonLL = L' done step begin
