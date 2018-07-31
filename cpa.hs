@@ -22,6 +22,7 @@ import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
 import           Options.Applicative
 import           Paths_haskell_aes                      (version)
+import qualified Statistics.Sample                      as S
 import           Text.Printf                            (printf)
 
 
@@ -40,14 +41,14 @@ main = do
     Just t -> return t
     Nothing -> do
       t <- bracket (tracesInit $ tracesDir opts) tracesClose (\h -> tracesLoad h 0) :: IO (Trace Int)
-      return $ U.length $ trace t
+      return $ length $ trace t
 
   -- import des traces
   h <- tracesInit $ tracesDir opts
   let tmin' = tmin opts
       len   = tmax' - tmin'
       nsize' = nsize opts
-  traces <- map trace <$> forM [(0::Int)..(nsize'-1)] (\i -> tracesLoad' h i tmin' len) :: IO [U.Vector Float]
+  traces <- forM [(0::Int)..(nsize'-1)] (\i -> trace <$> tracesLoad' h i tmin' len) :: IO [[Double]]
   tracesClose h
 
   -- calcul des hypothèses de clé
@@ -70,19 +71,25 @@ main = do
       hyps = [map fromIntegral h | h <- hyps']
 
   -- calcul des correlations
-  let cs = [ flip run pearsonUx $ zip traces h | h <- hyps ]
-      abscs = [ U.map abs c | c <- cs ]
-      maxs = U.fromList [ U.maximum x | x <- abscs ]
+  let transpose :: [[a]] -> [[a]]
+      transpose ([]:_) = []
+      transpose x = (map head x) : transpose (map tail x)
+  let pass :: [[Double]] ->  [[Double]] -> [[Double]]
+      pass _ [] = []
+      pass ts (h:hs) = map (\t -> S.correlation $ U.fromList $ zip t h) ts : pass ts hs
+  let cs = pass (transpose traces) hyps
+      abscs = map abs <$> cs
 
+  let maxs = U.fromList $ Prelude.maximum <$> abscs
   print "Max correlation value: {} \n" [U.maximum maxs]
   print "   found for key byte #{} \n" [U.maxIndex maxs]
 
   -- tracé des courbes CPA
   let graphFile = tracesDir opts
-                  </> printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
+                  </> printf "CPA SS byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
   print "\nRendering the CPA plot in: {}\n" [graphFile]
-  let datahyps = [ zip [(1::Float)..10000] $ U.toList c | c <- deleteAt secret cs ]
-  let datasecret = [ zip [(1::Float)..10000] $ U.toList $ cs !! secret]
+  let datahyps = [ zip [(1::Double)..10000] $ c | c <- deleteAt secret cs ]
+  let datasecret = [ zip [(1::Double)..10000] $ cs !! secret]
 
   -- TODO fix axe abscisse si tmin != 0
   toFile def graphFile $ do
@@ -93,7 +100,7 @@ main = do
 
 
 -- * Traces
-newtype Trace a = Trace { trace :: U.Vector a
+newtype Trace a = Trace { trace :: [a]
                         } deriving (Show)
 
 data TraceHandle = TraceHandle
@@ -108,7 +115,7 @@ tracesInit d = return $ TraceHandle d
 tracesLoad :: (Read a, U.Unbox a) => TraceHandle -> Int -> IO (Trace a)
 tracesLoad (TraceHandle d) i = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
-  return $! Trace $ U.fromList $ map read $ takeWhile (not . null) $ splitOn " " s
+  return $! Trace $ map read $ takeWhile (not . null) $ splitOn " " s
 
 -- | Load a new trace, filter samples out of the window of interest
 tracesLoad' :: (Read a, U.Unbox a) => TraceHandle
@@ -118,9 +125,8 @@ tracesLoad' :: (Read a, U.Unbox a) => TraceHandle
                                           -> IO (Trace a)
 tracesLoad' (TraceHandle d) i m l = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
-  return $! Trace $ U.fromList
-                 $ take l $ drop m
-                 $ map read $ takeWhile (not . null) $ splitOn " " s
+  return $! Trace $ take l $ drop m
+                  $ map read $ takeWhile (not . null) $ splitOn " " s
 
 tracesClose :: TraceHandle -> IO ()
 tracesClose _ = return ()
