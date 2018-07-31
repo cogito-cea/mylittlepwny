@@ -127,7 +127,7 @@ tracesLoadIndexed :: (Read a, U.Unbox a) => TraceHandle -> Int -> IO (Trace a)
 tracesLoadIndexed (TraceHandle d _) i = do
   -- s <- readFile $ d </> (show $ format "trace_{}.txt" [ left 9 '0' i ])
   s <- readFile $ d </> printf "trace_%09d.txt" i
-  return $ Trace $ U.fromList $ map read $ takeWhile (not . null) $ splitOn " " s
+  return $! Trace $ U.fromList $ map read $ takeWhile (not . null) $ splitOn " " s
 tracesLoadIndexed' :: (Read a, U.Unbox a) => TraceHandle
                                           -> Int  -- ^ the trace number
                                           -> Int  -- ^ tmin. index of the first sample
@@ -135,7 +135,7 @@ tracesLoadIndexed' :: (Read a, U.Unbox a) => TraceHandle
                                           -> IO (Trace a)
 tracesLoadIndexed' (TraceHandle d _) i m l = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
-  return $ Trace $ U.fromList
+  return $! Trace $ U.fromList
                  $ take l $ drop m
                  $ map read $ takeWhile (not . null) $ splitOn " " s
 
