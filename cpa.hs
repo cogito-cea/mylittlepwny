@@ -3,7 +3,6 @@
 {-# LANGUAGE OverloadedStrings          #-}
 
 -- import for Traces
-import           Data.IORef
 import           Data.List.Split
 import           System.FilePath.Posix                  ((</>))
 
@@ -23,7 +22,6 @@ import           Graphics.Rendering.Chart.Easy
 import           Options.Applicative
 import           Paths_haskell_aes                      (version)
 import           Text.Printf                            (printf)
-
 
 import           Aes
 import           Aes.Hypothesis
@@ -51,7 +49,6 @@ main = do
   tracesClose h
 
   -- calcul des hypothèses de clé
-  -- TODO seulement sur la première clé pour l'instant
   keys <- case keyFile opts of
             Nothing -> return [stringImport  "0X01 0X23 0X45 0X67 0X89 0XAB 0XCD 0XEF 0X12 0X34 0X56 0X78 0X9A 0XBC 0XDE 0XF0"]
             Just f  -> importTexts f
