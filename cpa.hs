@@ -39,7 +39,7 @@ main = do
   tmax' <- case tmax opts of
     Just t -> return t
     Nothing -> do
-      t <- bracket (tracesInit $ tracesDir opts) tracesClose tracesLoad :: IO (Trace Int)
+      t <- bracket (tracesInit $ tracesDir opts) tracesClose (\h -> tracesLoad h 0) :: IO (Trace Int)
       return $ U.length $ trace t
 
   -- import des traces
@@ -47,7 +47,7 @@ main = do
   let tmin' = tmin opts
       len   = tmax' - tmin'
       nsize' = nsize opts
-  traces <- map trace <$> forM [(0::Int)..(nsize'-1)] (\i -> tracesLoadIndexed' h i tmin' len) :: IO [U.Vector Float]
+  traces <- map trace <$> forM [(0::Int)..(nsize'-1)] (\i -> tracesLoad' h i tmin' len) :: IO [U.Vector Float]
   tracesClose h
 
   -- calcul des hypothèses de clé
@@ -98,42 +98,25 @@ newtype Trace a = Trace { trace :: U.Vector a
 
 data TraceHandle = TraceHandle
   { tracedir :: FilePath
-  , counter  :: IORef Int -- TODO delete this
+  -- , counter  :: IORef Int -- Still not happy with the API for loading functions...
   }
 
 tracesInit :: FilePath -> IO TraceHandle
-tracesInit d = TraceHandle d <$> newIORef 0
+tracesInit d = return $ TraceHandle d
 
--- | Load a new trace.
-tracesLoad :: (Read a, U.Unbox a) => TraceHandle -> IO (Trace a)
-tracesLoad h@(TraceHandle _ n) = do
-  t <- readIORef n >>= tracesLoadIndexed h
-  modifyIORef' n (+1)
-  return t
-
--- | Load a new trace, filter samples out of the window of interest
-tracesLoad' :: (Read a, U.Unbox a) => TraceHandle  -- ^ the trace handle
-                                   -> Int          -- ^ tmin.  index of the first sample
-                                   -> Int          -- ^ len.  size of the sample window
-                                   -> IO (Trace a) -- ^ the loaded trace
-tracesLoad' h@(TraceHandle _ n) m l = do
-  x <- readIORef n
-  t <- tracesLoadIndexed' h x m l
-  modifyIORef' n (+1)
-  return t
-
--- | Load a specific trace.
-tracesLoadIndexed :: (Read a, U.Unbox a) => TraceHandle -> Int -> IO (Trace a)
-tracesLoadIndexed (TraceHandle d _) i = do
-  -- s <- readFile $ d </> (show $ format "trace_{}.txt" [ left 9 '0' i ])
+-- | Load a trace.
+tracesLoad :: (Read a, U.Unbox a) => TraceHandle -> Int -> IO (Trace a)
+tracesLoad (TraceHandle d) i = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
   return $! Trace $ U.fromList $ map read $ takeWhile (not . null) $ splitOn " " s
-tracesLoadIndexed' :: (Read a, U.Unbox a) => TraceHandle
+
+-- | Load a new trace, filter samples out of the window of interest
+tracesLoad' :: (Read a, U.Unbox a) => TraceHandle
                                           -> Int  -- ^ the trace number
                                           -> Int  -- ^ tmin. index of the first sample
                                           -> Int  -- ^ len.  size of the sample window
                                           -> IO (Trace a)
-tracesLoadIndexed' (TraceHandle d _) i m l = do
+tracesLoad' (TraceHandle d) i m l = do
   s <- readFile $ d </> printf "trace_%09d.txt" i
   return $! Trace $ U.fromList
                  $ take l $ drop m
