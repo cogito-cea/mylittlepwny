@@ -170,7 +170,6 @@ ttestU = L' done step begin
 {-# INLINABLE ttestU #-}
 
 data PearsonState a = PS !Int !a !a !a !a !a
-data PearsonStateUx a b = PSUx !Int !a !b !a !a !b
 
 {-| Pearson correlation, single-pass version.
 
@@ -245,21 +244,22 @@ pearsonUU = L' done step begin
       U.zipWith (/) sxy $ U.map sqrt $ U.zipWith (*) sxx syy
 {-# INLINABLE pearsonUU #-}
 
-{-| Pearson correlation between a stream of vectors and a stream of scalars.
+{-| Pearson's correlation between a stream of vectors and a stream of scalars.
 
-Returns a vector of correlation values.
+Returns a vector of correlation values, and the history of the maximum correlation values over the vector of correlation values.
 -}
-pearsonUx :: (Floating a, U.Unbox a) => L' (U.Vector a, a) (U.Vector a)
+pearsonUx :: (Floating a, Ord a, U.Unbox a) => L' (U.Vector a, a) (U.Vector a, U.Vector a)
 pearsonUx = L' done step begin
   where
-    begin = PSUx 0 U.empty 0 U.empty U.empty 0
-    step (PSUx 0 _ _ _ _ _) (x, y) = PSUx 1 x y sxx' sxy' syy'
+    begin = PSUx 0 U.empty 0 U.empty U.empty 0 U.empty
+    step (PSUx 0 _ _ _ _ _ _) (x, y) = PSUx 1 x y sxx' sxy' syy' max'
       where
         zeros = U.map (const 0) x -- Assuming the two vectors have the same size
         sxx' = zeros -- sxx + devx*(x - xbar') = 0 + x * (x - x)
         sxy' = zeros
         syy' = 0
-    step (PSUx n xbar ybar sxx sxy syy) (x, y) = PSUx n' xbar' ybar' sxx' sxy' syy'
+        max' = U.empty
+    step (PSUx n xbar ybar sxx sxy syy m) (x, y) = PSUx n' xbar' ybar' sxx' sxy' syy' max'
       where
         n' = n + 1
         devx = U.zipWith (-) x xbar
@@ -269,9 +269,22 @@ pearsonUx = L' done step begin
         sxx' = U.zipWith (+) sxx $ U.zipWith (*) devx $ U.zipWith (-) x xbar'
         sxy' = U.zipWith (+) sxy $ U.map (* (y - ybar')) devx
         syy' = syy + devy * (y - ybar')
-    done (PSUx _ _ _ sxx sxy syy) =
-      U.zipWith (/) sxy $ U.map (\x -> sqrt (x * syy)) sxx -- TODO fuse maps
+        c = U.zipWith (/) sxy $ U.map (\q -> sqrt (q * syy)) sxx
+        max' = m `U.snoc` U.maximum c
+    done (PSUx _ _ _ sxx sxy syy m) =
+        ( U.zipWith (/) sxy $ U.map (\x -> sqrt (x * syy)) sxx
+        , m
+        )
 {-# INLINABLE pearsonUx #-}
+
+data PearsonStateUx a b =
+  PSUx !Int  -- ^ index of the current iteration
+       !a    -- ^ mean of x (vector)
+       !b    -- ^ mean of y (scalar)
+       !a    -- ^ variance of x
+       !a    -- ^ covariance(x,y)
+       !b    -- ^ variance of y
+       !a    -- ^ history of max values of Pearson's correlation coefficient
 
 pearsonLL :: (Floating a) => L' ([a], [a]) ([a])
 pearsonLL = L' done step begin

@@ -28,6 +28,8 @@ import           Aes.Hypothesis
 import           AesImport
 import           Folds
 
+-- TODO data-parallel version
+
 main :: IO ()
 main = do
   opts <- execParser optInfo
@@ -67,22 +69,37 @@ main = do
       hyps = [map fromIntegral h | h <- hyps']
 
   -- calcul des correlations
-  let cs = [ flip run pearsonUx $ zip traces h | h <- hyps ]
+  let (cs, cmaxs) = unzip [ flip run pearsonUx $ zip traces h | h <- hyps ]
       abscs = [ U.map abs c | c <- cs ]
       maxs = U.fromList [ U.maximum x | x <- abscs ]
 
-  print "Max correlation value: {} \n" [U.maximum maxs]
-  print "   found for key byte #{} \n" [U.maxIndex maxs]
-
   -- tracé des courbes CPA
+  -- ---------------------
+
+  -- courbe (correlation, #sample); projection sur chaque instant d'échantillonnage pour le nombre max d'itérations
   let graphFile = tracesDir opts
-                  </> printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
+                  </> printf "CPA-T byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
   print "\nRendering the CPA plot in: {}\n" [graphFile]
   let abscissa = [(fromIntegral tmin') .. (fromIntegral tmax' - 1)] :: [Float]
   let datahyps = [ zip abscissa $ U.toList c | c <- deleteAt secret cs ]
   let datasecret = [ zip abscissa $ U.toList $ cs !! secret]
   toFile def graphFile $ do
-    layout_title .= "Pearson's correlation coefficient"
+    layout_title .= printf "Pearson's correlation. Computation for %d traces." nsize'
+    setColors [ opaque grey, opaque black]
+    plot $ line "Wrong key hypotheses" $ datahyps
+    plot $ line "Secret key" $ datasecret
+
+  -- courbe (correlation, #trace); projection sur le nombre de traces
+  let graphFile = tracesDir opts
+                  </> printf "CPA-D byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
+  print "\nRendering the CPA plot in: {}\n" [graphFile]
+  let abscissa = [0 .. (fromIntegral nsize')] :: [Float]
+  let datahyps = [ zip abscissa $ U.toList c | c <- deleteAt secret cmaxs ]
+  let datasecret = [ zip abscissa $ U.toList $ cmaxs !! secret]
+  toFile def graphFile $ do
+    layout_y_axis . laxis_generate .= scaledAxis def (0, 1)
+    layout_title .=
+      printf "Pearson's correlation. Projection over the number of traces used. t ∈ [%d; %d]" tmin' tmax'
     setColors [ opaque grey, opaque black]
     plot $ line "Wrong key hypotheses" $ datahyps
     plot $ line "Secret key" $ datasecret
