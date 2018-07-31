@@ -43,9 +43,9 @@ main = do
   -- import des traces
   h <- tracesInit $ tracesDir opts
   let tmin' = tmin opts
-      len   = tmax' - tmin'
+      tlen  = tmax' - tmin'
       nsize' = nsize opts
-  traces <- map trace <$> forM [(0::Int)..(nsize'-1)] (\i -> tracesLoad' h i tmin' len) :: IO [U.Vector Float]
+  traces <- map trace <$> forM [(0::Int)..(nsize'-1)] (\i -> tracesLoad' h i tmin' tlen) :: IO [U.Vector Float]
   tracesClose h
 
   -- calcul des hypothèses de clé
