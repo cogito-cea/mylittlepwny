@@ -12,6 +12,7 @@ import           Prelude                                hiding (print)
 
 import           Control.Exception                      (bracket)
 import           Control.Monad
+import           Data.Bits                              (popCount)
 import           Data.Maybe                             (fromMaybe)
 import           Data.Monoid                            ((<>))
 import           Data.Text.Format
@@ -65,7 +66,7 @@ main = do
   let keyHyps = [0..255]
       secret = fromIntegral $ getByte (byte opts) $ toAesText key
       txts = take nsize' texts
-      hyps' = [ fstSBOX' (byte opts) k txts | k <- keyHyps]
+      hyps' = [ popCount <$> fstSBOX' (byte opts) k txts | k <- keyHyps]
       hyps = [map fromIntegral h | h <- hyps']
 
   -- calcul des correlations
