@@ -69,8 +69,6 @@ executable cpa
                      , filepath
                      , haskell-aes
                      , optparse-applicative
-                     , random
-                     , statistics
                      , text
                      , text-format
                      , vector
