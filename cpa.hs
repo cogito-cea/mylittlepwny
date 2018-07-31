@@ -84,8 +84,8 @@ main = do
   toFile def graphFile $ do
     layout_title .= "Pearson's correlation coefficient"
     setColors [ opaque grey, opaque black]
-    plot $ line "correlation" $ datahyps
-    plot $ line "correlation" $ datasecret
+    plot $ line "Wrong key hypotheses" $ datahyps
+    plot $ line "Secret key" $ datasecret
 
 
 -- * Traces
