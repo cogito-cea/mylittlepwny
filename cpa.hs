@@ -78,10 +78,9 @@ main = do
   let graphFile = tracesDir opts
                   </> printf "CPA byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
   print "\nRendering the CPA plot in: {}\n" [graphFile]
-  let datahyps = [ zip [(1::Float)..10000] $ U.toList c | c <- deleteAt secret cs ]
-  let datasecret = [ zip [(1::Float)..10000] $ U.toList $ cs !! secret]
-
-  -- TODO fix axe abscisse si tmin != 0
+  let abscissa = [(fromIntegral tmin') .. (fromIntegral tmax' - 1)] :: [Float]
+  let datahyps = [ zip abscissa $ U.toList c | c <- deleteAt secret cs ]
+  let datasecret = [ zip abscissa $ U.toList $ cs !! secret]
   toFile def graphFile $ do
     layout_title .= "Pearson's correlation coefficient"
     setColors [ opaque grey, opaque black]
