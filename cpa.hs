@@ -1,6 +1,8 @@
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE RecordWildCards            #-}
+
 
 -- import for Traces
 import           Data.List.Split
@@ -9,8 +11,13 @@ import           System.FilePath.Posix                  ((</>))
 -- CPA
 import           Prelude                                hiding (print)
 
+import           Control.Concurrent
+import           Control.Concurrent.Async
+import           Control.DeepSeq                        (force)
 import           Control.Exception                      (bracket)
+import           Control.Exception                      (evaluate)
 import           Control.Monad
+import           Control.Parallel.Strategies
 import           Data.Bits                              (popCount)
 import           Data.Maybe                             (fromMaybe)
 import           Data.Monoid                            ((<>))
@@ -21,7 +28,8 @@ import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
 import           Options.Applicative
 import           Paths_haskell_aes                      (version)
-import           Text.Printf                            (printf)
+import           Text.Printf                            ( printf)
+
 
 import           Aes
 import           Aes.Hypothesis
@@ -29,6 +37,7 @@ import           AesImport
 import           Folds
 
 -- TODO data-parallel version
+-- TODO t-test
 
 main :: IO ()
 main = do
@@ -36,18 +45,18 @@ main = do
 
   -- calcul sur toutes les traces, pour une seule hypothèse de clé seulement, sur l'octet 0
   -- calcul de la longueur des traces
-  tmax' <- case tmax opts of
+  tmax' <- case tmaxOpt opts of
     Just t -> return t
     Nothing -> do
-      t <- bracket (tracesInit $ tracesDir opts) tracesClose (\h -> tracesLoad h 0) :: IO (Trace Int)
+      t <- bracket (tracesInit $ tracesOpt opts) tracesClose (\h -> tracesLoad h 0) :: IO (Trace Int)
       return $ U.length $ trace t
 
   -- import des traces
-  h <- tracesInit $ tracesDir opts
-  let tmin' = tmin opts
+  h <- tracesInit $ tracesOpt opts
+  let tmin' = tminOpt opts
       tlen  = tmax' - tmin'
-      nsize' = nsize opts
-  traces <- map trace <$> forM [(0::Int)..(nsize'-1)] (\i -> tracesLoad' h i tmin' tlen) :: IO [U.Vector Float]
+      nsize' = nsizeOpt opts
+  traces <- map trace <$> forConcurrently [(0::Int)..(nsize'-1)] (\i -> tracesLoad' h i tmin' tlen) :: IO [U.Vector Float]
   tracesClose h
 
   -- calcul des hypothèses de clé
@@ -58,51 +67,79 @@ main = do
         [k] -> k :: Key
         _   -> error "Error.  Found more than one key value in the keyFile"
 
-  let textfile = fromMaybe ((tracesDir opts) </> "plaintexts.txt") (textFile opts)
+  let textfile = fromMaybe ((tracesOpt opts) </> "plaintexts.txt") (textFile opts)
   texts <- importTexts textfile :: IO [Plaintext]
 
   -- the key hypothesis
   let keyHyps = [0..255]
-      secret = fromIntegral $ getByte (byte opts) $ toAesText key
+      secret = fromIntegral $ getByte (byteOpt opts) $ toAesText key
       txts = take nsize' texts
-      hyps' = [ popCount <$> fstSBOX' (byte opts) k txts | k <- keyHyps]
+      hyps' = [ popCount <$> fstSBOX' (byteOpt opts) k txts | k <- keyHyps]
       hyps = [map fromIntegral h | h <- hyps']
 
   -- calcul des correlations
-  let (cs, cmaxs) = unzip [ flip run pearsonUx $ zip traces h | h <- hyps ]
+  let cs' = force
+            $ ((map (\h -> flip run pearsonUx $ zip traces h) hyps) `using` parList rseq)
+  let (cs, cmaxs) = unzip cs'
       abscs = [ U.map abs c | c <- cs ]
       maxs = U.fromList [ U.maximum x | x <- abscs ]
+
+  print "Max correlation value: {} \n" [U.maximum maxs]
+  print "   found for key byte #{} \n" [U.maxIndex maxs]
 
   -- tracé des courbes CPA
   -- ---------------------
 
+  let plotOpts = PlotCPA (tracesOpt opts) (byteOpt opts) nsize' tmin' tmax'
+
   -- courbe (correlation, #sample); projection sur chaque instant d'échantillonnage pour le nombre max d'itérations
-  let graphFile = tracesDir opts
-                  </> printf "CPA-T byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
-  print "\nRendering the CPA plot in: {}\n" [graphFile]
-  let abscissa = [(fromIntegral tmin') .. (fromIntegral tmax' - 1)] :: [Float]
-  let datahyps = [ zip abscissa $ U.toList c | c <- deleteAt secret cs ]
-  let datasecret = [ zip abscissa $ U.toList $ cs !! secret]
-  toFile def graphFile $ do
-    layout_title .= printf "Pearson's correlation. Computation for %d traces." nsize'
-    setColors [ opaque grey, opaque black]
-    plot $ line "Wrong key hypotheses" $ datahyps
-    plot $ line "Secret key" $ datasecret
+  p0 <- async $ plotCPAT plotOpts (CorrelationSKey $ cs !! secret) (CorrelationHyps $ deleteAt secret cs)
 
   -- courbe (correlation, #trace); projection sur le nombre de traces
-  let graphFile = tracesDir opts
-                  </> printf "CPA-D byte:%d n:%d tmin:%05d tmax:%05d.png" (byte opts) nsize' tmin' tmax'
+  p1 <- async $ plotCPAD plotOpts (CorrelationSKey $ cmaxs !! secret) (CorrelationHyps $ deleteAt secret cmaxs)
+
+  wait p0
+  wait p1
+
+newtype CorrelationHyps a = CorrelationHyps [U.Vector a]
+newtype CorrelationSKey a = CorrelationSKey (U.Vector a)
+
+data PlotCPA = PlotCPA
+  { tracesDir :: FilePath
+  , byte      :: Int
+  , nsize     :: Int
+  , tmin      :: Int
+  , tmax      :: Int
+  }
+
+plotCPAT :: (Num a, PlotValue a, RealFloat a, Show a, U.Unbox a)
+  => PlotCPA -> CorrelationSKey a -> CorrelationHyps a -> IO ()
+plotCPAT PlotCPA{..} (CorrelationSKey dsecret) (CorrelationHyps dhyps) = do
+  let graphFile = tracesDir
+                  </> printf "CPA-T byte:%d n:%d tmin:%05d tmax:%05d.png" byte nsize tmin tmax
   print "\nRendering the CPA plot in: {}\n" [graphFile]
-  let abscissa = [0 .. (fromIntegral nsize')] :: [Float]
-  let datahyps = [ zip abscissa $ U.toList c | c <- deleteAt secret cmaxs ]
-  let datasecret = [ zip abscissa $ U.toList $ cmaxs !! secret]
   toFile def graphFile $ do
+    layout_title .= printf "Pearson's correlation. Computation for %d traces." nsize
+    setColors [ opaque grey, opaque black]
+    let abscissa = [(fromIntegral tmin)..] :: [Float]
+    plot $ line "Wrong key hypotheses" $ [ zip abscissa $ U.toList c | c <- dhyps ]
+    plot $ line "Secret key" $ [ zip abscissa $ U.toList $ dsecret ]
+
+-- it's time to introduce the Reader Monad!
+plotCPAD :: (Num a, PlotValue a, RealFloat a, Show a, U.Unbox a)
+  => PlotCPA -> CorrelationSKey a -> CorrelationHyps a -> IO ()
+plotCPAD PlotCPA{..} (CorrelationSKey dsecret) (CorrelationHyps dhyps) = do
+  let fd = tracesDir
+                  </> printf "CPA-D byte:%d n:%d tmin:%05d tmax:%05d.png" byte nsize tmin tmax
+  print "\nRendering the CPA plot in: {}\n" [fd]
+  toFile def fd $ do
     layout_y_axis . laxis_generate .= scaledAxis def (0, 1)
     layout_title .=
-      printf "Pearson's correlation. Projection over the number of traces used. t ∈ [%d; %d]" tmin' tmax'
+      printf "Pearson's correlation. Projection over the number of traces used. t ∈ [%d; %d]" tmin tmax
     setColors [ opaque grey, opaque black]
-    plot $ line "Wrong key hypotheses" $ datahyps
-    plot $ line "Secret key" $ datasecret
+    let abscissa = [0..] :: [Float]
+    plot $ line "Wrong key hypotheses" $ [ zip abscissa $ U.toList c | c <- dhyps ]
+    plot $ line "Secret key" $ [ zip abscissa $ U.toList dsecret ]
 
 
 -- * Traces
@@ -142,13 +179,13 @@ tracesClose _ = return ()
 -- * CLI options
 data AppOptions = AppOptions
   { -- cmd        :: !Command
-    tracesDir :: FilePath
+    tracesOpt :: FilePath
   , textFile  :: !(Maybe FilePath)
   , keyFile   :: !(Maybe FilePath)
-  , byte      :: !Int
-  , nsize     :: Int        -- ^ number of traces used for the CPA analysis
-  , tmin      :: Int        -- ^ the number of the first sample used
-  , tmax      :: Maybe Int  -- ^ the number of the latest sample used
+  , byteOpt   :: !Int
+  , nsizeOpt  :: Int        -- ^ number of traces used for the CPA analysis
+  , tminOpt   :: Int        -- ^ the number of the first sample used
+  , tmaxOpt   :: Maybe Int  -- ^ the number of the latest sample used
   } deriving (Show)
 
 -- | read program options

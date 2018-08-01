@@ -85,12 +85,15 @@ executable cpa
   main-is:             cpa.hs
   other-modules:       Paths_haskell_aes
   build-depends:       base >= 4 && < 5
+                     , async
                      , Chart
                      , Chart-cairo
                      , bytestring
+                     , deepseq
                      , filepath
                      , haskell-aes
                      , optparse-applicative
+                     , parallel
                      , text
                      , text-format
                      , vector
