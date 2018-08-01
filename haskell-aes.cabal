@@ -18,6 +18,21 @@ build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
 
+
+flag debug
+    default: False
+    manual: True
+
+flag development
+    description:
+        Turn on '-Werror'
+    default: False
+    manual: True
+
+flag threadscope
+    default: False
+    manual: True
+
 library
   hs-source-dirs:      src
   exposed-modules:     Aes
@@ -40,9 +55,13 @@ library
                      , vector
   default-language:    Haskell2010
   if !flag(debug)
-    ghc-options:    -Wall -O2 +RTS -N -RTS
+    ghc-options:    -Wall -O2
   else
     ghc-options:    -Wall
+
+  if flag(development)
+    ghc-options:    -Wall
+
 
 executable cpa-hyps
   main-is:             cpa-hyps.hs
@@ -54,10 +73,13 @@ executable cpa-hyps
                      , random
                      , optparse-applicative
   if !flag(debug)
-    ghc-options:    -Wall -threaded -O2 +RTS -N -RTS
+    ghc-options:    -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
   else
     ghc-options:    -Wall -threaded
   hs-source-dirs:      .
+
+  if flag(development)
+    ghc-options:    -Wall
 
 executable cpa
   main-is:             cpa.hs
@@ -74,11 +96,17 @@ executable cpa
                      , vector
                      -- Traces
                      , split
-  if !flag(debug)
-    ghc-options:    -Wall -threaded -O2 +RTS -N -RTS
-  else
-    ghc-options:    -Wall -threaded
   hs-source-dirs:      .
+  ghc-options:       -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
+
+  if flag(threadscope)
+    ghc-options:     -Wall -O2 -threaded -rtsopts "-with-rtsopts=-ls -N" -eventlog
+
+  if flag(development)
+    ghc-options:     -Wall
+
+  if flag(debug)
+    ghc-options:     -Wall
 
 test-suite tasty
   type:             exitcode-stdio-1.0
@@ -108,7 +136,7 @@ test-suite tasty
                   , array >=0.5 && <0.6
                   , bytestring
   default-language: Haskell2010
-  ghc-options:      -Wall -threaded -O2 +RTS -N -RTS
+  ghc-options:      -Wall
 
 test-suite doctest
   type: exitcode-stdio-1.0
@@ -118,7 +146,7 @@ test-suite doctest
                   , base >= 4 && < 5
                   , doctest
   default-language: Haskell2010
-  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:      -Wall
 
 test-suite criterion
   type: exitcode-stdio-1.0
@@ -128,8 +156,9 @@ test-suite criterion
                   , haskell-aes
                   , criterion
   default-language: Haskell2010
-  ghc-options:      -Wall -threaded -rtsopts -with-rtsopts=-N
+  ghc-options:      -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
 
-flag debug
-    default: False
-    manual: True
+-- threadscope usage:
+-- $ stack build --flag scarlet:threadscope
+-- $ stack exec scarlet -- +RTS -ls -RTS files
+-- $ threadscope scarlet.eventlog &
