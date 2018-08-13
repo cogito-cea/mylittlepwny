@@ -180,3 +180,61 @@ make test
     :PROPERTIES:
   :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
   :END:
+
+* todo notes -- misc
+
+** SCA
+
+*** API
+
+objectif : revoir l'API pour modularité et combinaison des éléments de processing
+- fonctions de chargement de traces
+- préprocessing des traces
+- calcul des hypothèses d'attaque
+- modèle "comportemental"
+- distingueur / fonction de corrélation
+
+******** MAYBE  implémentation de fonctions de filtrage
+    CLOSED: [2018-08-17 ven. 13:28]
+    :PROPERTIES:
+          :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+          :END:
+
+     - State "MAYBE"      from "TODO"       [2018-08-17 ven. 13:28]
+
+Haskell HIP - Haskell Image Processing. Regarder comment les filtres sont implantés
+- https://github.com/lehins/hip/blob/master/src/Graphics/Image/Processing/Filter.hs
+- Image Processing — GSoC’18 With Haskell – Khilan Ravani – Medium
+  https://medium.com/@khilanravani/image-processing-gsoc18-with-haskell-84177cec618
+
+*** CPA
+
+**** perfs
+
+******** TODO [#A] optimiser le chargement des traces -- format binaire.
+    :PROPERTIES:
+          :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+          :END:
+
+ optimiser le chargement des traces: format binaire,
+ un seul fichier ou plusieurs ? (pour l'instant, c'est au moins la moitié du temps de calcul !!)
+
+******** TODO add strictness
+    :PROPERTIES:
+          :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+          :END:
+
+- GHC extension : =StrictData= makes all fields of datatypes strict by default
+
+- https://www.reddit.com/r/haskell/comments/93y35l/created_my_first_useful_haskell_application/
+  I would make the records fields strict when we don't need them to be
+  lazy, this way we have better performances, we prevent some space
+  leaks, and we prevent some exceptions to pop up at unexpected
+  locations.
+
+*** t-test
+
+******** TODO implémentation outil pour t-test
+    :PROPERTIES:
+    :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+    :END:
