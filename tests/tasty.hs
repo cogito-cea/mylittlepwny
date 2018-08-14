@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-orphans  #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
