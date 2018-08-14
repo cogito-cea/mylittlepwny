@@ -1,7 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-module Aes.Bits
-  where
 
 -- | Description of bit positions in an integral value. The main
 -- purpose of this module is to provide the type 'BitPos' and
@@ -9,6 +7,9 @@ module Aes.Bits
 --
 -- This module is different from 'Data.Bits', which provides bitwise
 -- functions over integral types.
+
+module Aes.Bits
+  where
 
 import           Data.Bits (shiftR, (.&.), Bits)
 
