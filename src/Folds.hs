@@ -278,13 +278,13 @@ pearsonUx = L' done step begin
 {-# INLINABLE pearsonUx #-}
 
 data PearsonStateUx a b =
-  PSUx !Int  -- ^ index of the current iteration
-       !a    -- ^ mean of x (vector)
-       !b    -- ^ mean of y (scalar)
-       !a    -- ^ variance of x
-       !a    -- ^ covariance(x,y)
-       !b    -- ^ variance of y
-       !a    -- ^ history of max values of Pearson's correlation coefficient
+  PSUx !Int  -- index of the current iteration
+       !a    -- mean of x (vector)
+       !b    -- mean of y (scalar)
+       !a    -- variance of x
+       !a    -- covariance(x,y)
+       !b    -- variance of y
+       !a    -- history of max values of Pearson's correlation coefficient
 
 pearsonLL :: (Floating a) => L' ([a], [a]) ([a])
 pearsonLL = L' done step begin
