@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wno-orphans  #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -11,7 +10,7 @@ import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.SmallCheck
 
-import           Data.Bits                        (xor)
+import           Data.Bits                        (shiftL, shiftR, xor, (.&.))
 import           Data.Word
 import           GHC.Generics                     ()
 

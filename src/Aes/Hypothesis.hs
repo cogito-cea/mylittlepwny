@@ -15,28 +15,28 @@ import           AesImport
 --
 --   'byte' is a 'Byte', i.e. an 'Int' value expected between 0 and
 --   15, 23, 31 included for AES-128, AES-196 and AES-256 respectively.
-keyHyps :: Byte -> [Key]
-keyHyps byte =
+keyHypothesis :: Byte -> [Key]
+keyHypothesis byte =
   let pre  = replicate byte 0
       post = replicate (15 - byte) 0
       keybytes = [pre ++ [k] ++ post | k <- [0..255]]
       keyw32 = map tow32 keybytes
   in  map (Key128 . RawKey) keyw32
 
--- | Considering the key byte 'byte' attacked (see 'keyHyps'),
+-- | Considering the key byte 'byte' attacked (see 'keyHypothesis'),
 --   generate the matrix of hypothetical AES init states according to
 --   the input plaintexts 't'.
-initStateHyps :: Byte -> Plaintext -> [State]
-initStateHyps byte t =
-  let keys = keyHyps byte
+initState :: Byte -> Plaintext -> [State]
+initState byte t =
+  let keys = keyHypothesis byte
   in  [aesInit k t | k <- keys ]
 
--- | Considering the key byte 'byte' attacked (see 'keyHyps'),
+-- | Considering the key byte 'byte' attacked (see 'keyHypothesis'),
 --   compute the matrix of hypothetical values at the output of the
---   first SBOX, according to the input plaintexts 't'.
+--   first SBOX, according to the input list of plaintexts 'ts'.
 firstAddRK :: Byte -> Plaintext -> [Word8]
 firstAddRK byte t =
-  let states = initStateHyps byte t
+  let states = initState byte t
       firstRound = addRoundKey <$> states
   in  (getByte byte . toAesText) <$> firstRound
 
@@ -49,7 +49,7 @@ firstSBOX k t = aesInit k t $$ addRoundKey $$ subBytes
 --   't'.
 firstSBOXHyps :: Byte -> Plaintext -> [Word8]
 firstSBOXHyps byte t =
-  let states = initStateHyps byte t
+  let states = initState byte t
       firstRound = (subBytes . addRoundKey) <$> states
   in  (getByte byte . toAesText) <$> firstRound
 
@@ -71,6 +71,11 @@ firstSBOXHypsPartial :: Byte -> [Word8] -> Plaintext -> [Word8]
 firstSBOXHypsPartial byte ks txt = (subByte . xor txtbyte) <$> ks
   where
     txtbyte = (bytes txt) !! byte
+
+fstSBOX' :: Byte -> Word8 -> [Plaintext] -> [Word8]
+fstSBOX' byte k txts = [subByte $ xor b k | b <- txtbyte]
+  where
+    txtbyte = [(bytes txt) !! byte | txt <- txts]
 
 -- | Power model: compute the hamming weight.
 hammingWeight :: [[Word8]] -> [[Int]]
