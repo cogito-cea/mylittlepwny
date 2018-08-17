@@ -4,21 +4,15 @@
 {-# LANGUAGE RecordWildCards            #-}
 
 
--- import for Traces
-import           Data.List.Split
-import           System.FilePath.Posix                  ((</>))
-
 -- CPA
 import           Prelude                                hiding (print)
 
-import           Control.Concurrent
 import           Control.Concurrent.Async
 import           Control.DeepSeq                        (force)
 import           Control.Exception                      (bracket)
-import           Control.Exception                      (evaluate)
-import           Control.Monad
 import           Control.Parallel.Strategies
 import           Data.Bits                              (popCount)
+import           Data.List.Split
 import           Data.Maybe                             (fromMaybe)
 import           Data.Monoid                            ((<>))
 import           Data.Text.Format
@@ -28,16 +22,19 @@ import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
 import           Options.Applicative
 import           Paths_haskell_aes                      (version)
-import           Text.Printf                            ( printf)
-
+import           System.FilePath.Posix                  ((</>))
+import           Text.Printf                            (printf)
 
 import           Aes
 import           Aes.Hypothesis
 import           AesImport
 import           Folds
 
--- TODO data-parallel version
+
 -- TODO t-test
+-- TODO nouvelle méthode Pearson -> scarlet
+-- TODO t-test -> scarlet
+-- TODO optimiser le chargement des traces: format binaire, un seul fichier ou plusieurs ? (pour l'instant, c'est au moins la moitié du temps de calcul !!)
 
 main :: IO ()
 main = do
@@ -78,8 +75,7 @@ main = do
       hyps = [map fromIntegral h | h <- hyps']
 
   -- calcul des correlations
-  let cs' = force
-            $ ((map (\h -> flip run pearsonUx $ zip traces h) hyps) `using` parList rseq)
+  let cs' = force ((map (\h -> flip run pearsonUx $ zip traces h) hyps) `using` parList rseq)
   let (cs, cmaxs) = unzip cs'
       abscs = [ U.map abs c | c <- cs ]
       maxs = U.fromList [ U.maximum x | x <- abscs ]
@@ -100,6 +96,7 @@ main = do
 
   wait p0
   wait p1
+
 
 newtype CorrelationHyps a = CorrelationHyps [U.Vector a]
 newtype CorrelationSKey a = CorrelationSKey (U.Vector a)
