@@ -232,6 +232,16 @@ Haskell HIP - Haskell Image Processing. Regarder comment les filtres sont implan
   leaks, and we prevent some exceptions to pop up at unexpected
   locations.
 
+
+******** MAYBE [#A] perfs GC
+    CLOSED: [2018-08-27 lun. 13:01]
+    :PROPERTIES:
+         :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
+         :END:
+
+         - State "MAYBE"      from "TODO"       [2018-08-27 lun. 13:01]
+https://www.reddit.com/r/haskell/comments/99y15j/help_debugging_yesod_app_in_production/
+
 *** t-test
 
 ******** TODO implémentation outil pour t-test
@@ -250,5 +260,7 @@ http://tobbebex.blogspot.fr/2015/09/gpu-programming-in-haskell-using-gpipe.html
 
 ******** TODO regarder ces deux bibliothèques
 
-- http://hackage.haskell.org/package/vec
-- http://hackage.haskell.org/package/sized-vector
+- https://hackage.haskell.org/package/fixed-vector
+- http://hackage.haskell.org/package/vec -- implémentation qui vise
+  l'utilisation d'un nombre réduit de dépendances
+- http://hackage.haskell.org/package/sized-vector  -- *deprecated* in favor of =sized=
