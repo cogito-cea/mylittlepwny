@@ -39,10 +39,12 @@ type Byte = Int
 getByte :: Byte -> AesText -> Word8
 getByte x (AesText _ t) = t !! x
 
+instance Semigroup AesText where
+  (AesText n t) <> (AesText n' t') =
+    AesText (n+n') (t ++ t')
+
 instance Monoid AesText where
   mempty = AesText 0 []
-  mappend (AesText n t) (AesText n' t') =
-    AesText (n+n') (t ++ t')
   mconcat = foldr mappend mempty
 
 

@@ -5,7 +5,6 @@
 {-# LANGUAGE UndecidableInstances  #-}
 
 import           Test.SmallCheck.Series
-import           Test.SmallCheck.Series.Instances ()
 import           Test.Tasty
 import           Test.Tasty.HUnit
 import           Test.Tasty.SmallCheck
