@@ -1,10 +1,11 @@
-FROM fpco/stack-build:lts-9.10
+FROM fpco/stack-build:lts-12.5
 MAINTAINER Damien Couroussé "damien.courousse@cea.fr"
 
 RUN apt-get update        \
  && apt-get install -y    \
             gosu
 
+RUN rm -rf /var/lib/apt/lists/*
 
 # location of the sources
 VOLUME  /haskell-aes
