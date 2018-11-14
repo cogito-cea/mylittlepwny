@@ -87,6 +87,7 @@ executable cpa
                      , optparse-applicative
                      , parallel
                      , formatting
+                     , text
                      , vector
                      -- Traces
                      , split

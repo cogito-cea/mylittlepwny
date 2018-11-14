@@ -13,6 +13,7 @@ import           Control.Parallel.Strategies
 import           Data.Bits                              (popCount)
 import           Data.Maybe                             (fromMaybe)
 import           Data.Monoid                            ((<>))
+import qualified Data.Text                              as T
 import qualified Data.Vector.Unboxed                    as U
 import qualified Data.Version                           as V (showVersion)
 import           Formatting
@@ -29,6 +30,7 @@ import           AesImport
 import           Folds
 import qualified Traces.Raw                             as Traces
 
+default (T.Text)
 
 -- TODO t-test
 -- TODO nouvelle méthode Pearson -> scarlet
@@ -38,8 +40,6 @@ import qualified Traces.Raw                             as Traces
 main :: IO ()
 main = do
   opts <- execParser optInfo
-
-  -- TODO be more verbose, show user settings
 
   -- importing data traces
   (h, tmax') <- case tracesOpt opts of
@@ -56,6 +56,15 @@ main = do
   let tmin = tminOpt opts
       tmax = fromMaybe tmax' (tmaxOpt opts)
       nbtraces = nbTracesOpt opts
+
+  -- print some user settings
+  fprint "Settings: \n"
+  let fter :: Format r (T.Text -> Int -> r)
+      fter = right 20 ' ' % left 10 ' ' % "\n"
+  fprint fter "number of traces: " nbtraces
+  fprint fter "tmin: " tmin
+  fprint fter "tmax: " tmax
+  fprint "\n"
 
   -- calcul des hypothèses de clé
   keys <- case keyFile opts of
