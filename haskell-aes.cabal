@@ -40,6 +40,7 @@ library
                      , AesImport
                      , Folds
                      , Masking
+                     , Traces.Raw
   other-modules:       Aes.Reference
                      , Aes.Bits
                      , Aes.Bytes
@@ -48,6 +49,7 @@ library
                      , Aes.Bits
   build-depends:       base
                      , array
+                     , binary
                      , bytestring
                      , deepseq
                      , folds
@@ -84,7 +86,7 @@ executable cpa
                      , haskell-aes
                      , optparse-applicative
                      , parallel
-                     , text-format
+                     , formatting
                      , vector
                      -- Traces
                      , split
