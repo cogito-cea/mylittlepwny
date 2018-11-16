@@ -4,8 +4,9 @@
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
 
-module CPA where
-
+module CPA
+  ( cpa
+  ) where
 
 import           Control.Concurrent.Async
 import           Control.DeepSeq                        (force)
@@ -100,9 +101,9 @@ cpa CPAOptions{..} = do
   wait p1
 
 -- | Correlation for all hypothesis but the secret key
-newtype CorrelationHyps a = CorrelationHyps [U.Vector a]
+newtype CorrelationHyps a = CorrelationHyps [Traces.Trace a]
 -- | Correlation for the secret key
-newtype CorrelationSKey a = CorrelationSKey (U.Vector a)
+newtype CorrelationSKey a = CorrelationSKey (Traces.Trace a)
 
 data PlotCPA = PlotCPA
   { plotDir  :: FilePath

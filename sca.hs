@@ -2,6 +2,7 @@ import           Options.Applicative
 
 import           CLI
 import           CPA
+import           View
 
 
 -- TODO t-test
@@ -16,6 +17,3 @@ main = do
   case cmd of
     View o -> viewTraces o
     CPA o  -> cpa o
-
-viewTraces :: ViewOptions -> IO ()
-viewTraces = undefined

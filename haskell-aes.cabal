@@ -78,6 +78,7 @@ executable sca
                      , CPA
                      , Folds
                      , Traces.Raw
+                     , View
   build-depends:       base
                      , Chart
                      , Chart-cairo
