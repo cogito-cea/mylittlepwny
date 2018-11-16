@@ -225,6 +225,7 @@ main = do
               $ info (TTestFR <$> txtOpt <*> sepOpt)
               $ progDesc $ unlines
               [ "Compute two populations of plaintexts for the non-specific t-test (fixed vs. random), for the output of the first SBOX."
+              -- TODO update help message
               , "Generates two plaintext files named after the contents of options --population0 and --population1."
               ]
 

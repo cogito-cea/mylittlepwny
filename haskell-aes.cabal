@@ -33,14 +33,12 @@ flag threadscope
     manual: True
 
 library
-  hs-source-dirs:      src
+  hs-source-dirs:      lib
   exposed-modules:     Aes
                      , Aes.Hypothesis
                      , Aes.Random
                      , AesImport
-                     , Folds
                      , Masking
-                     , Traces.Raw
   other-modules:       Aes.Reference
                      , Aes.Bits
                      , Aes.Bytes
@@ -49,10 +47,8 @@ library
                      , Aes.Bits
   build-depends:       base
                      , array
-                     , binary
                      , bytestring
                      , deepseq
-                     , folds
                      , random
                      , vector
   default-language:    Haskell2010
@@ -74,23 +70,29 @@ executable cpa-hyps
   if flag(development)
     ghc-options:    -Wall
 
-executable cpa
-  main-is:             cpa.hs
+executable sca
+  main-is:             sca.hs
+  hs-source-dirs:      src
   other-modules:       Paths_haskell_aes
+                     , CLI
+                     , CPA
+                     , Folds
+                     , Traces.Raw
   build-depends:       base
-                     , async
                      , Chart
                      , Chart-cairo
+                     , async
+                     , binary
+                     , bytestring
                      , deepseq
                      , filepath
+                     , folds
+                     , formatting
                      , haskell-aes
                      , optparse-applicative
                      , parallel
-                     , formatting
                      , text
                      , vector
-                     -- Traces
-                     , split
   hs-source-dirs:      .
   ghc-options:       -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
   ghc-options:       -Wno-name-shadowing
