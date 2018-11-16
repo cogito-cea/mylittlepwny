@@ -10,6 +10,7 @@ module CPA
 
 import           Control.Concurrent.Async
 import           Control.DeepSeq                        (force)
+import           Control.Monad                          (replicateM)
 import           Control.Parallel.Strategies
 import           Data.Bits                              (popCount)
 import           Data.Maybe                             (fromMaybe)
@@ -24,9 +25,9 @@ import           Text.Printf                            (printf)
 import           Aes
 import           Aes.Hypothesis
 import           AesImport
+import           CLI
 import           Folds
 import qualified Traces.Raw                             as Traces
-import CLI
 
 default (T.Text)
 
@@ -75,7 +76,8 @@ cpa CPAOptions{..} = do
       hyps = [map fromIntegral h | h <- hyps']
 
   -- CPA analysis
-  let ts = Traces.load' h tmin tmax
+  -- TODO fix workaround replicateM, use Conduit
+  ts <- replicateM nbTraces $ Traces.load' h tmin tmax
   let cs' = force ((map (\h -> flip run pearsonUx $ zip ts h) hyps) `using` parList rseq)
   let (cs, cmaxs) = unzip cs'
       abscs = [ U.map abs c | c <- cs ]
@@ -83,6 +85,11 @@ cpa CPAOptions{..} = do
 
   fprint ("Max correlation value: " % float % " \n") $ U.maximum maxs
   fprint ("   found for key byte #" % float % " \n") $ U.maxIndex maxs
+
+  print $ length cmaxs
+  -- TODO les vecteurs n'ont pas la bonne longueur -- manque un élément
+  print $ U.length $ cmaxs !! secret
+  print $ length cs
 
   -- plot CPA results
   -- ----------------

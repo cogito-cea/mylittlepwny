@@ -8,6 +8,9 @@ module View
   ( viewTraces
   ) where
 
+import           Conduit                                hiding (yieldMany)
+import           Data.Conduit                           ((.|))
+import           Data.Conduit.Combinators               (repeatM)
 import           Data.Maybe                             (fromMaybe)
 import qualified Data.Text                              as T
 import qualified Data.Vector.Unboxed                    as U
@@ -21,8 +24,6 @@ import           CLI
 import qualified Traces.Raw                             as Traces
 
 default (T.Text)
-
--- TODO use a streaming library to avoid loading *all* the traces (we load from an IO action)
 
 viewTraces :: ViewOptions -> IO ()
 viewTraces ViewOptions{..} = do
@@ -40,7 +41,6 @@ viewTraces ViewOptions{..} = do
 
   -- print some user settings
   let tmax = fromMaybe tmax' mtmax
-  let nbTraces = 10
   let fter :: Format r (T.Text -> Int -> r)
       fter = right 20 ' ' % left 10 ' ' % "\n"
   fprint "CPA Settings: \n"
@@ -49,14 +49,13 @@ viewTraces ViewOptions{..} = do
   fprint fter "tmax: " tmax
   fprint "\n"
 
-  -- CPA analysis
-  let ts = take nbTraces $ Traces.load' h tmin tmax
+  -- load traces
+  ts <- runConduit
+    $ repeatM (Traces.load' h tmin tmax)
+    .| takeC nbTraces
+    .| sinkList
 
-  -- plot CPA results
-  -- ----------------
-
-  let plotOpts = PlotOpts traceDir nbTraces tmin tmax
-  plotTraces plotOpts ts
+  plotTraces (PlotOpts traceDir nbTraces tmin tmax) ts
 
 
 data PlotOpts = PlotOpts
@@ -67,14 +66,17 @@ data PlotOpts = PlotOpts
   }
 
 -- | plot Pearson's correlation.  Computation for n traces.
+--
+-- MAYBE use conduit
+--    plotTraces :: (...) => PlotOpts -> ConduitT (Trace a) () m ()
 plotTraces :: (Num a, PlotValue a, RealFloat a, Show a, U.Unbox a)
   => PlotOpts -> [Traces.Trace a] -> IO ()
 plotTraces PlotOpts{..} ts = do
   let graphFile = plotDir
                   </> printf "Traces n:%d tmin:%05d tmax:%05d.png" plotSize plotTmin plotTmax
-  fprint ("\nRendering the CPA plot in: " % string % " \n") graphFile
+  fprint ("\nRendering the view plot in: " % string % " \n") graphFile
   toFile def graphFile $ do
-    layout_title .= printf "TODO TODO: %d." plotSize
+    layout_title .= printf "Observation traces.  %d traces plotted." plotSize
     setColors [ opaque grey, opaque black]
     let abscissa = [(fromIntegral plotTmin)..] :: [Float]
-    plot $ line "Wrong key hypotheses" $ [ zip abscissa $ U.toList c | c <- ts ]
+    plot $ line "Side-channel trace" $ [ zip abscissa $ U.toList c | c <- ts ]

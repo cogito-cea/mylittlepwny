@@ -85,6 +85,7 @@ executable sca
                      , async
                      , binary
                      , bytestring
+                     , conduit
                      , deepseq
                      , filepath
                      , folds

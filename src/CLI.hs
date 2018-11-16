@@ -8,11 +8,11 @@
 
 module CLI where
 
-import           Data.Monoid                            ((<>))
-import qualified Data.Text                              as T
-import qualified Data.Version                           as V (showVersion)
+import           Data.Monoid         ((<>))
+import qualified Data.Text           as T
+import qualified Data.Version        as V (showVersion)
 import           Options.Applicative
-import           Paths_haskell_aes                      (version)
+import           Paths_haskell_aes   (version)
 
 default (T.Text)
 
@@ -83,9 +83,10 @@ showVersion = V.showVersion version
 -- * View options
 
 data ViewOptions = ViewOptions
-  { traces :: !TraceData
-  , tmin   :: !Int          -- ^ the number of the first sample used
-  , mtmax  :: !(Maybe Int)  -- ^ the number of the latest sample used
+  { traces   :: !TraceData
+  , tmin     :: !Int          -- ^ the number of the first sample used
+  , mtmax    :: !(Maybe Int)  -- ^ the number of the latest sample used
+  , nbTraces :: !Int          -- ^ number of traces used for the CPA analysis
   } deriving (Show)
 
 cmdViewParser :: Parser Command
@@ -95,6 +96,7 @@ cmdViewParser =
     <$> parseTraces
     <*> parseTmin
     <*> parseTmax
+    <*> parseNbTraces 16
   )
 
 -- * CPA Options
@@ -125,16 +127,20 @@ cmdCPAParser = CPA <$>
                      <> help "Location of the key file"
                    )
                  )
-    <*> option (fromInteger <$> auto)
-    ( long "nbtraces" <> short 'n'
-      <> metavar "NSIWE"
-      <> help "Number of traces used for the CPA analysis [default: 512]"
-      <> value 512
-    )
+    <*> parseNbTraces 512
     <*> option (fromInteger <$> auto)
     ( long "byte" <> short 'b'
       <> metavar "BYTE"
       <> help "Number of the key byte to attack [default: 0]"
       <> value 0
     )
+  )
+
+-- * option parsers
+parseNbTraces :: Int -> Parser Int
+parseNbTraces n = option (fromInteger <$> auto)
+  ( long "nbtraces" <> short 'n'
+    <> metavar "NSIWE"
+    <> help "Number of traces used for the CPA analysis [default: 512]"
+    <> value n
   )

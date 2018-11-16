@@ -1,7 +1,3 @@
-{-
-
--}
-
 {-# LANGUAGE RecordWildCards #-}
 
 -- |
@@ -26,18 +22,19 @@ module Traces.Raw
   , close
   ) where
 
-import           Control.Applicative  (many)
-import           Control.Monad        (replicateM)
+import           Control.Monad        (replicateM, when)
 import           Data.Binary.Get
-import qualified Data.ByteString.Lazy as BSL
+import qualified Data.ByteString.Lazy as BL
 import qualified Data.Vector.Unboxed  as U
+import qualified System.IO as IO
 
 
 type Trace a = U.Vector a
 
 data Handle = Handle
-  { rawStream :: BSL.ByteString
-  , traceSize :: !Int
+  { handle :: IO.Handle
+  , sizeB :: !Int  -- ^ trace size, in bytes
+  , sampleNb :: !Int  -- ^ trace size, in elements
   }
 
 {-| The trace file has the following format:
@@ -47,49 +44,50 @@ data Handle = Handle
 + stream of data samples
 -}
 
--- | return a 'Handle' on the stream of side-channel traces
+-- | Return a 'Handle' on the stream of side-channel traces
 init :: FilePath -> IO Handle
 init filename = do
-  f <- BSL.readFile filename
-  let s =  fromIntegral $ runGet getInt32host f
-  return $ Handle f s
+  h <- IO.openFile filename IO.ReadMode
 
--- | Read the data header, return the number of samples per trace
+  -- read the number of samples per trace
+  s <- fromIntegral . runGet getInt32host <$> BL.hGet h 4
+
+  -- check that the sample size is 2.  We don't handle other cases currently.
+  ssize <- fromIntegral . runGet getInt32host <$> BL.hGet h 4
+  when (ssize /= 2) $ error "Wrong data format.  The file header tells that the sample size is not 2."
+
+  return $ Handle h (s*ssize) s
+
+-- | Return the number of samples per trace
 size :: Handle -> Int
-size Handle{..} = traceSize
+size Handle{..} = sampleNb
 
--- | Load lazily the list of traces.
-load :: Handle -> [Trace Float]
-load Handle{..} = flip runGet rawStream $ do
-  -- the number of samples
-  _ <- getInt32host
-  -- samples size
-  _ <- getInt32host
-  -- the list of traces
-  many $ getTrace traceSize
-
+-- | Load one trace
+--
+-- MAYBE. use Conduit?
+--   load :: Handle -> ConduitT () (Trace Float) m ()
+load :: Handle -> IO (Trace Float)
+load Handle{..} = do
+  raw <- BL.hGet handle sizeB
+  return $ runGet getTrace raw
   where
-    getTrace :: Int -> Get (Trace Float)
-    getTrace n = U.fromList . map fromIntegral <$> replicateM n getInt16host
+    getTrace :: Get (Trace Float)
+    getTrace = U.fromList . map fromIntegral <$> replicateM sampleNb getInt16host
 
--- | Load lazily the list of traces.
+-- | Load one trace, filter samples out of the observation window.
+--
+-- MAYBE. use Conduit?
+--   load' :: Handle -> Int -> Int -> ConduitT () (Trace Float) m ()
 load' :: Handle
       -> Int     -- ^ 'tmin'. Index of the first sample in the observation window
       -> Int     -- ^ 'tmax'. 'tmax-1' is the index of the last sample in the observation window
-      -> [Trace Float]
-load' Handle{..} tmin tmax =
-  let
-    getTrace :: Int -> Get (Trace Float)
-    getTrace n = U.fromList . map fromIntegral . take (tmax-tmin) . drop (tmin-1) <$> replicateM n getInt16host
-  in
-    flip runGet rawStream $ do
-    -- the number of samples
-    _ <- getInt32host
-    -- samples size
-    _ <- getInt32host
-    -- the list of traces
-    many $ getTrace traceSize
-
+      -> IO (Trace Float)
+load' Handle{..} tmin tmax = do
+  raw <- BL.hGet handle sizeB
+  return $ runGet getTrace raw
+  where
+    getTrace :: Get (Trace Float)
+    getTrace = U.fromList . map fromIntegral . take (tmax-tmin) . drop (tmin-1) <$> replicateM sampleNb getInt16host
 
 -- | Close the trace handler.  Actually, this function does nothing.
 close :: Handle -> IO ()
