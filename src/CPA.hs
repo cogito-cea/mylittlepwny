@@ -86,11 +86,6 @@ cpa CPAOptions{..} = do
   fprint ("Max correlation value: " % float % " \n") $ U.maximum maxs
   fprint ("   found for key byte #" % float % " \n") $ U.maxIndex maxs
 
-  print $ length cmaxs
-  -- TODO les vecteurs n'ont pas la bonne longueur -- manque un élément
-  print $ U.length $ cmaxs !! secret
-  print $ length cs
-
   -- plot CPA results
   -- ----------------
   let plotOpts = PlotCPA traceDir byte nbTraces tmin tmax

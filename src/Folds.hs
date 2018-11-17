@@ -258,7 +258,7 @@ pearsonUx = L' done step begin
         sxx' = zeros -- sxx + devx*(x - xbar') = 0 + x * (x - x)
         sxy' = zeros
         syy' = 0
-        max' = U.empty
+        max' = U.fromList [1] -- all correlation values are supposed to be '1' at the beginning.
     step (PSUx n xbar ybar sxx sxy syy m) (x, y) = PSUx n' xbar' ybar' sxx' sxy' syy' max'
       where
         n' = n + 1
