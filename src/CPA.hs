@@ -93,19 +93,16 @@ cpa CPAOptions{..} = do
 
   -- plot CPA results
   -- ----------------
-
   let plotOpts = PlotCPA traceDir byte nbTraces tmin tmax
-  print nbTraces
-
-  -- courbe (correlation, #sample); projection sur chaque instant d'échantillonnage pour le nombre max d'itérations
-  p0 <- async $ plotCPAT plotOpts (CorrelationSKey $ cs !! secret) (CorrelationHyps $ deleteAt secret cs)
-
-  -- courbe (correlation, #trace); projection sur le nombre de traces
-  -- TODO tracé pour 1000 traces seulement ?
-  p1 <- async $ plotCPAD plotOpts (CorrelationSKey $ cmaxs !! secret) (CorrelationHyps $ deleteAt secret cmaxs)
-
-  wait p0
-  wait p1
+  concurrently_
+    (
+      -- courbe (correlation, #sample); projection sur chaque instant d'échantillonnage pour le nombre max d'itérations
+      plotCPAT plotOpts (CorrelationSKey $ cs !! secret) (CorrelationHyps $ deleteAt secret cs)
+    )
+    (
+      -- courbe (correlation, #trace); projection sur le nombre de traces
+      plotCPAD plotOpts (CorrelationSKey $ cmaxs !! secret) (CorrelationHyps $ deleteAt secret cmaxs)
+    )
 
 -- | Correlation for all hypothesis but the secret key
 newtype CorrelationHyps a = CorrelationHyps [Traces.Trace a]
