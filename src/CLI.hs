@@ -14,10 +14,16 @@ import qualified Data.Version        as V (showVersion)
 import           Options.Applicative
 import           Paths_haskell_aes   (version)
 
+import           CLI.Types
+import           CPA
+import           TTest
+import           View
+
 default (T.Text)
 
 data Command = View ViewOptions
              | CPA CPAOptions
+             | TTest TTestOptions
 
 optParser :: Parser Command
 optParser = hsubparser
@@ -25,11 +31,9 @@ optParser = hsubparser
                      ( progDesc "View traces"))
     <>  command "cpa" ( info cmdCPAParser
                         ( progDesc "CPA analysis"))
+    <>  command "ttest" ( info cmdTTestParser
+                        ( progDesc "Non-specific t-test"))
   )
-
-data TraceData = TracesDir FilePath
-               | TraceRawFile FilePath
-               deriving (Show, Eq)
 
 parseTraces :: Parser TraceData
 parseTraces =
@@ -82,13 +86,6 @@ showVersion = V.showVersion version
 
 -- * View options
 
-data ViewOptions = ViewOptions
-  { traces   :: !TraceData
-  , tmin     :: !Int          -- ^ the number of the first sample used
-  , mtmax    :: !(Maybe Int)  -- ^ the number of the latest sample used
-  , nbTraces :: !Int          -- ^ number of traces used for the CPA analysis
-  } deriving (Show)
-
 cmdViewParser :: Parser Command
 cmdViewParser =
   View <$>
@@ -100,16 +97,6 @@ cmdViewParser =
   )
 
 -- * CPA Options
-
-data CPAOptions = CPAOptions
-  { traces   :: !TraceData
-  , tmin     :: !Int          -- ^ the number of the first sample used
-  , mtmax    :: !(Maybe Int)  -- ^ the number of the latest sample used
-  , textFile :: !FilePath
-  , keyFile  :: !(Maybe FilePath)
-  , nbTraces :: !Int          -- ^ number of traces used for the CPA analysis
-  , byteOpt  :: !Int
-  } deriving (Show)
 
 cmdCPAParser :: Parser Command
 cmdCPAParser = CPA <$>
@@ -134,6 +121,23 @@ cmdCPAParser = CPA <$>
       <> help "Number of the key byte to attack [default: 0]"
       <> value 0
     )
+  )
+
+-- * TTest Options
+
+cmdTTestParser :: Parser Command
+cmdTTestParser = TTest <$>
+  ( TTestOptions
+    <$> parseTraces
+    <*> parseTmin
+    <*> parseTmax
+    <*> parseNbTraces 20000
+    <*> ( strOption
+                   ( long "classesFile" <> short 'c'
+                     <> metavar "CLASSESFILE"
+                     <> help "Location of the 'classes file'"
+                   )
+                 )
   )
 
 -- * option parsers

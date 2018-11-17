@@ -6,6 +6,7 @@
 
 module View
   ( viewTraces
+  , ViewOptions(..)
   ) where
 
 import           Conduit                                hiding (yieldMany)
@@ -20,7 +21,7 @@ import           Graphics.Rendering.Chart.Easy
 import           System.FilePath.Posix                  (takeDirectory, (</>))
 import           Text.Printf                            (printf)
 
-import           CLI
+import           CLI.Types
 import qualified Traces.Raw                             as Traces
 
 default (T.Text)
@@ -80,3 +81,11 @@ plotTraces PlotOpts{..} ts = do
     setColors [ opaque grey, opaque black]
     let abscissa = [(fromIntegral plotTmin)..] :: [Float]
     plot $ line "Side-channel trace" $ [ zip abscissa $ U.toList c | c <- ts ]
+
+-- * CLI Options
+data ViewOptions = ViewOptions
+  { traces   :: !TraceData
+  , tmin     :: !Int          -- ^ the number of the first sample used
+  , mtmax    :: !(Maybe Int)  -- ^ the number of the latest sample used
+  , nbTraces :: !Int          -- ^ number of traces used for the CPA analysis
+  } deriving (Show)

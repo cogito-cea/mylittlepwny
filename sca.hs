@@ -2,6 +2,7 @@ import           Options.Applicative
 
 import           CLI
 import           CPA
+import           TTest
 import           View
 
 
@@ -15,5 +16,6 @@ main = do
   cmd <- execParser optInfo
 
   case cmd of
-    View o -> viewTraces o
-    CPA o  -> cpa o
+    View o  -> viewTraces o
+    CPA o   -> cpa o
+    TTest o -> ttest o

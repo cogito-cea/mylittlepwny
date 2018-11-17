@@ -6,6 +6,7 @@
 
 module CPA
   ( cpa
+  , CPAOptions(..)
   ) where
 
 import           Control.Concurrent.Async
@@ -25,7 +26,7 @@ import           Text.Printf                            (printf)
 import           Aes
 import           Aes.Hypothesis
 import           AesImport
-import           CLI
+import           CLI.Types
 import           Folds
 import qualified Traces.Raw                             as Traces
 
@@ -151,3 +152,15 @@ plotCPAD PlotCPA{..} (CorrelationSKey dsecret) (CorrelationHyps dhyps) = do
 deleteAt :: Int -> [a] -> [a]
 deleteAt n xs = let (ys, zs) = splitAt n xs
                 in  ys ++ tail zs
+
+
+-- * CLI options
+data CPAOptions = CPAOptions
+  { traces   :: !TraceData
+  , tmin     :: !Int          -- ^ the number of the first sample used
+  , mtmax    :: !(Maybe Int)  -- ^ the number of the latest sample used
+  , textFile :: !FilePath
+  , keyFile  :: !(Maybe FilePath)
+  , nbTraces :: !Int          -- ^ number of traces used for the CPA analysis
+  , byteOpt  :: !Int
+  } deriving (Show)

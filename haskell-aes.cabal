@@ -75,8 +75,10 @@ executable sca
   hs-source-dirs:      src
   other-modules:       Paths_haskell_aes
                      , CLI
+                     , CLI.Types
                      , CPA
                      , Folds
+                     , TTest
                      , Traces.Raw
                      , View
   build-depends:       base
