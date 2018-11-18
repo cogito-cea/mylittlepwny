@@ -150,6 +150,8 @@ ttest = L' done step begin
 {-# INLINABLE ttest #-}
 
 -- | Welch's t-test for Data.Vector.Unboxed
+--
+-- TODO compute the max t-value at the same time
 ttestU :: (Floating a, U.Unbox a) => L' (U.Vector a, U.Vector a) (U.Vector a)
 ttestU = L' done step begin
   where
