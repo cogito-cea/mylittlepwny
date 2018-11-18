@@ -35,6 +35,10 @@ instance HasBitPos State where
 -- | Extract the 'n'th bit of the input data. 'Plaintext' stores
 -- 'Word8' values with the _least_ significant first, i.e.
 -- [p0, p1, p2...].
+--
+-- >>> let t = Plaintext [8,4,2,1]
+-- >>> map (\x -> bitPosPt x t) [0..33]
+-- [Bit 0,Bit 0,Bit 0,Bit 1,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 1,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 1,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 1,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0]
 bitPosPt :: BitPos -> Plaintext -> Bit
 bitPosPt (BitPos n) (Plaintext ws)
   | bytePos >= 0 = Bit $ fromEnum (reverse ws !! bytePos) `shiftR` r .&. 0x1
@@ -48,6 +52,12 @@ bitPosPt (BitPos n) (Plaintext ws)
 
 -- | Extract the 'n'th bit of the input data. 'State' stores
 -- 'Word32' values... in an ankward way.  Actually using a Big Endian thingee.
+--
+-- >>> let s = State 8 1 0 0 undefined
+-- >>> map (\x -> bitPosSt x s) [0..16]
+-- [Bit 0,Bit 0,Bit 0,Bit 1,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0]
+-- >>> map (\x -> bitPosSt x s) [0..33]
+-- [Bit 0,Bit 0,Bit 0,Bit 1,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 0,Bit 1,Bit 0]
 bitPosSt :: BitPos -> State -> Bit
 bitPosSt (BitPos n) (State w0 w1 w2 w3 _)
   | bytePos >= 0 = toEnum $ fromEnum (ws !! bytePos) `shiftR` r .&. 0x1

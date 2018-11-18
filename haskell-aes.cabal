@@ -114,6 +114,7 @@ test-suite tasty
   type:             exitcode-stdio-1.0
   hs-source-dirs:   tests
                   , src
+                  , lib
   main-is:          tasty.hs
   other-modules:    Aes
                   , Aes.Bits
