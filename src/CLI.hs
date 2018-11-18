@@ -35,42 +35,6 @@ optParser = hsubparser
                         ( progDesc "Non-specific t-test"))
   )
 
-parseTraces :: Parser TraceData
-parseTraces =
-  ( TracesDir <$> strOption
-       ( metavar "TRACES_DIR"
-         <> help "Location of the directory with traces files, in textual format."
-         <> long "traces-dir"
-         <> short 'd'
-       )
-     )
-      <|> ( TraceRawFile <$> strOption
-            ( metavar "TRACE_RAWFILE"
-              <> help "Location of the trace files, in raw format."
-              <> long "trace-rawfile"
-              <> short 'f'
-            )
-          )
-
-parseTmin :: Parser Int
-parseTmin =
-  option (fromInteger <$> auto)
-  ( long "tmin"
-    <> metavar "TMIN"
-    <> help "Sample number for the start of the observation window [default: 0]."
-    <> value 0
-  )
-
-parseTmax :: Parser (Maybe Int)
-parseTmax =
-  optional ( option (fromInteger <$> auto)
-             ( long "tmax"
-               <> metavar "TMAX"
-               <> help "Sample number for the end of the observation window [default: full trace length]."
-             )
-           )
-
-
 optInfo :: ParserInfo Command
 optInfo = info
           ( helper <*> versionOption <*> optParser )
@@ -141,6 +105,7 @@ cmdTTestParser = TTest <$>
   )
 
 -- * option parsers
+
 parseNbTraces :: Int -> Parser Int
 parseNbTraces n = option (fromInteger <$> auto)
   ( long "nbtraces" <> short 'n'
@@ -148,3 +113,38 @@ parseNbTraces n = option (fromInteger <$> auto)
     <> help "Number of traces used for the CPA analysis [default: 512]"
     <> value n
   )
+
+parseTraces :: Parser TraceData
+parseTraces =
+  ( TracesDir <$> strOption
+       ( metavar "TRACES_DIR"
+         <> help "Location of the directory with traces files, in textual format."
+         <> long "traces-dir"
+         <> short 'd'
+       )
+     )
+      <|> ( TraceRawFile <$> strOption
+            ( metavar "TRACE_RAWFILE"
+              <> help "Location of the trace files, in raw format."
+              <> long "trace-rawfile"
+              <> short 'f'
+            )
+          )
+
+parseTmin :: Parser Int
+parseTmin =
+  option (fromInteger <$> auto)
+  ( long "tmin"
+    <> metavar "TMIN"
+    <> help "Sample number for the start of the observation window [default: 0]."
+    <> value 0
+  )
+
+parseTmax :: Parser (Maybe Int)
+parseTmax =
+  optional ( option (fromInteger <$> auto)
+             ( long "tmax"
+               <> metavar "TMAX"
+               <> help "Sample number for the end of the observation window [default: full trace length]."
+             )
+           )
