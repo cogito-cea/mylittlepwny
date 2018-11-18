@@ -37,14 +37,13 @@ library
   exposed-modules:     Aes
                      , Aes.Hypothesis
                      , Aes.Random
+                     , Aes.Bits
                      , AesImport
                      , Masking
   other-modules:       Aes.Reference
-                     , Aes.Bits
                      , Aes.Bytes
                      , Aes.Types
                      , Aes.Util
-                     , Aes.Bits
   build-depends:       base
                      , array
                      , bytestring
@@ -74,10 +73,12 @@ executable sca
   hs-source-dirs:      src
   other-modules:       Paths_haskell_aes
                      , CLI
-                     , CLI.Types
+                     , CLI.Internal
                      , CPA
                      , Folds
                      , TTest
+                     , TTest.NonSpecific
+                     , TTest.Specific
                      , Traces.Raw
                      , View
   build-depends:       base

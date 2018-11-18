@@ -1,6 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
-
 -- | Description of bit positions in an integral value. The main
 -- purpose of this module is to provide the type 'BitPos' and
 -- associated helpers.
@@ -8,16 +7,16 @@
 -- This module is different from 'Data.Bits', which provides bitwise
 -- functions over integral types.
 
-module Aes.Bits
-  where
+module Aes.Bits where
 
+import           Control.DeepSeq (NFData)
 import           Data.Bits (shiftR, (.&.), Bits)
 
 import           Aes.Types
 
 -- | a bit value extracted from Aes input, intermediate or output variables
 newtype Bit = Bit Int
-  deriving (Bits, Eq, Ord, Read, Show, Enum, Num)
+  deriving (Bits, Eq, Ord, Read, Show, Enum, Num, NFData)
 
 -- | The bit position of a bit variable in a bit field.  Bit numbering
 --   starts at 0, form LSB.

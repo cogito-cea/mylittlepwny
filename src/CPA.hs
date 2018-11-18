@@ -1,9 +1,12 @@
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 module CPA
   ( cpa
   , CPAOptions(..)
+
+  -- CLI
+  , cmdCPAParser
   ) where
 
 import           Control.Concurrent.Async
@@ -17,13 +20,14 @@ import qualified Data.Vector.Unboxed                    as U
 import           Formatting
 import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
+import           Options.Applicative
 import           System.FilePath.Posix                  (takeDirectory, (</>))
 import           Text.Printf                            (printf)
 
 import           Aes
 import           Aes.Hypothesis
 import           AesImport
-import           CLI.Types
+import           CLI.Internal
 import           Folds
 import qualified Traces.Raw                             as Traces
 
@@ -57,12 +61,9 @@ cpa CPAOptions{..} = do
   fprint "\n"
 
   -- compute the key hypothesis
-  keys <- case keyFile of
-            Nothing -> return [stringImport  "0X01 0X23 0X45 0X67 0X89 0XAB 0XCD 0XEF 0X12 0X34 0X56 0X78 0X9A 0XBC 0XDE 0XF0"]
-            Just f  -> importTexts f
-  let key = case keys of
-        [k] -> k :: Key
-        _   -> error "Error.  Found more than one key value in the keyFile"
+  key <- case keyFile of
+    Nothing -> return $ stringImport  "0X01 0X23 0X45 0X67 0X89 0XAB 0XCD 0XEF 0X12 0X34 0X56 0X78 0X9A 0XBC 0XDE 0XF0"
+    Just f  -> importKey f
 
   texts <- importTexts textFile :: IO [Plaintext]
 
@@ -161,3 +162,19 @@ data CPAOptions = CPAOptions
   , nbTraces :: !Int          -- ^ number of traces used for the CPA analysis
   , byteOpt  :: !Int
   } deriving (Show)
+
+cmdCPAParser :: Parser CPAOptions
+cmdCPAParser =
+  CPAOptions
+  <$> parseTraces
+  <*> parseTmin
+  <*> parseTmax
+  <*> parseTextFile
+  <*> optional parseKeyFile
+  <*> parseNbTraces 512
+  <*> option (fromInteger <$> auto)
+  ( long "byte" <> short 'b'
+    <> metavar "BYTE"
+    <> help "Number of the key byte to attack [default: 0]"
+    <> value 0
+  )

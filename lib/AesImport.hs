@@ -13,6 +13,7 @@ module AesImport
   , exportString
   , exportTexts
   , importTexts
+  , importKey
   , key
   , toHex
   ) where
@@ -167,6 +168,17 @@ key (AesText 16 bs) = Key128 $ RawKey $ tow32 $ bs
 key (AesText 24 bs) = Key192 $ RawKey $ tow32 $ bs
 key (AesText 32 bs) = Key256 $ RawKey $ tow32 $ bs
 key (AesText n _)   = error $ "unknown key length: " ++ show n
+
+
+-- | Import a key value from a text file.  A specialisation of
+--   'importTexts'.  Expects to find a single key value in the read
+--   text file.  Fails with 'error' otherwise.
+importKey :: FilePath -> IO Key
+importKey f = do
+  keys <- importTexts f
+  case keys of
+    [k] -> return k
+    _   -> error "Error.  Found more than one key value in the keyFile"
 
 -- | Convert each group of 4 'Word8's to a 'Word32', following a Big Endian-like representation.
 tow32 :: [Word8] -> [Word32]

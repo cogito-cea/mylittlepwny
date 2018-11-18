@@ -7,6 +7,9 @@
 module View
   ( viewTraces
   , ViewOptions(..)
+
+  -- CLI
+  , cmdViewParser
   ) where
 
 import           Conduit                                hiding (yieldMany)
@@ -18,10 +21,11 @@ import qualified Data.Vector.Unboxed                    as U
 import           Formatting
 import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
+import           Options.Applicative
 import           System.FilePath.Posix                  (takeDirectory, (</>))
 import           Text.Printf                            (printf)
 
-import           CLI.Types
+import           CLI.Internal
 import qualified Traces.Raw                             as Traces
 
 default (T.Text)
@@ -89,3 +93,11 @@ data ViewOptions = ViewOptions
   , mtmax    :: !(Maybe Int)  -- ^ the number of the latest sample used
   , nbTraces :: !Int          -- ^ number of traces used for the CPA analysis
   } deriving (Show)
+
+cmdViewParser :: Parser ViewOptions
+cmdViewParser =
+  ViewOptions
+  <$> parseTraces
+  <*> parseTmin
+  <*> parseTmax
+  <*> parseNbTraces 16
