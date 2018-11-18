@@ -15,10 +15,12 @@ module TTest.Specific
 import           Control.DeepSeq                        (force)
 import           Control.Monad                          (replicateM)
 import           Control.Parallel.Strategies
+import           Data.Bits                              (Bits, shiftR, (.&.))
 import           Data.Fold
 import           Data.Maybe                             (fromMaybe)
 import qualified Data.Text                              as T
 import qualified Data.Vector.Unboxed                    as U
+import           Data.Word                              (Word8)
 import           Formatting
 import           Graphics.Rendering.Chart.Backend.Cairo
 import           Graphics.Rendering.Chart.Easy
@@ -71,10 +73,10 @@ ttestSpecific TTestSpecificOptions{..} = do
   --    - sorting the two populations, lazily
   --    - take nbTraces in each population
   --  In this case, set the default value of nbTraces to 10000 (in CLI).
-  let partition :: L' (Bit, Traces.Trace Float) ([Traces.Trace Float], [Traces.Trace Float])
+  let partition :: L' (Word8, Traces.Trace Float) ([Traces.Trace Float], [Traces.Trace Float])
       partition = L' done step begin
       begin = ([], [])
-      step :: ([a], [a]) -> (Bit, a) -> ([a], [a])
+      step :: ([a], [a]) -> (Word8, a) -> ([a], [a])
       step (p0, p1) (c, x) =
         if (c == 0)
         then (p0 ++ [x], p1)
@@ -82,13 +84,19 @@ ttestSpecific TTestSpecificOptions{..} = do
       done = id
 
   -- compute the key hypothesis
-  let bit = toEnum targetBit
   key <- importKey keyFile
   texts <- take nbTraces <$> importTexts textFile
+  -- MAYBE use conduit to interleave traces loading with computations
   ts <- replicateM nbTraces $ Traces.load' h tmin tmax
 
-  -- let cs' = force ((map (\h -> flip run pearsonUx $ zip ts h) hyps) `using` parList rseq)
-  let hyps = force [ bitPosSt bit $ firstSBOX key t | t <- texts ] `using` parList rseq
+  -- FIXME.  the version commented below does not work. the bit indices are messed up.  i.e. bit 0 ~> 24, bit 8 ~> 16, etc.
+  -- let hyps = force [ bitPosSt bit $ firstSBOX key t | t <- texts ] `using` parList rseq
+
+  let targetByte = targetBit `div` 8
+      k = getByte targetByte $ toAesText key
+      getBit :: (Bits a, Num a) => Int -> a -> a
+      getBit b w = w `shiftR` b .&. 0x1
+      hyps = force (map (getBit $ targetBit `rem` 8) (fstSBOX' targetByte k texts)) `using` parList rseq
 
   let (pop0, pop1) = flip run partition $ zip hyps ts
 
