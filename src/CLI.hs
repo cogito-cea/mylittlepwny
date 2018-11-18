@@ -3,7 +3,10 @@
 
 -- | main CLI options
 
-module CLI where
+module CLI
+  ( parseCLI
+  , Command(..)
+  ) where
 
 import           Data.Monoid         ((<>))
 import qualified Data.Text           as T
@@ -17,6 +20,10 @@ import           TTest
 import           View
 
 default (T.Text)
+
+
+parseCLI :: IO Command
+parseCLI = execParser optInfo
 
 data Command = View ViewOptions
              | CPA CPAOptions
