@@ -56,17 +56,15 @@ firstSBOXHyps byte t =
 -- | Compute the hypothetic outputs of the first SBOX, for the key
 -- byte 'byte', and the input plaintext 'txt'.
 --
--- This is a optimised version of 'firstSBOXHyps', optimised at the
--- algorithmic level.
+-- This function provides the same results as 'firstSBOXHyps', but the
+-- implementation of this function is optimised at the algorithmic
+-- level.
 firstSBOXHyps' :: Byte -> Plaintext -> [Word8]
 firstSBOXHyps' b = firstSBOXHypsPartial b [0..255]
 
 -- | Compute the hypothetic outputs of the first SBOX, for the key
 -- byte 'byte', the input plaintext 'txt', and a partial list of key
 -- hypothetical values.
---
--- This is a optimised version of 'firstSBOXHyps', optimised at the
--- algorithmic level.
 firstSBOXHypsPartial :: Byte -> [Word8] -> Plaintext -> [Word8]
 firstSBOXHypsPartial byte ks txt = (subByte . xor txtbyte) <$> ks
   where
