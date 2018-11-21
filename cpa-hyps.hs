@@ -5,7 +5,7 @@ module Main where
 import           Data.Monoid         ((<>))
 import           Data.Version        (showVersion)
 import           Options.Applicative
-import qualified Paths_haskell_aes   as V (version)
+import qualified Paths_mylittlepwny   as V (version)
 import           System.Exit         (exitSuccess)
 import           System.Random       (getStdGen, randoms)
 

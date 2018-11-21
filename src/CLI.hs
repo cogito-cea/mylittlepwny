@@ -11,7 +11,7 @@ import           Data.Monoid         ((<>))
 import qualified Data.Text           as T
 import qualified Data.Version        as V (showVersion)
 import           Options.Applicative
-import           Paths_haskell_aes   (version)
+import           Paths_mylittlepwny   (version)
 
 import           CLI.Internal
 import           CPA

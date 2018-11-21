@@ -8,15 +8,14 @@ RUN apt-get update        \
 RUN rm -rf /var/lib/apt/lists/*
 
 # location of the sources
-VOLUME  /haskell-aes
-WORKDIR /haskell-aes
+VOLUME  /mylittlepwny
+WORKDIR /mylittlepwny
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 ENTRYPOINT  ["/usr/local/bin/entrypoint.sh"]
 
 # build command:
-# $ docker build --tag haskell-aes:latest docker
+# $ docker build --tag mylittlepwny:latest docker
 #
 # run command:
-# $ docker run --rm -i -t --volume $(pwd):/haskell-aes --env LOCAL_USER_ID=$(id -u) haskell-aes:latest bash
-
+# $ docker run --rm -i -t --volume $(pwd):/mylittlepwny --env LOCAL_USER_ID=$(id -u) mylittlepwny:latest bash

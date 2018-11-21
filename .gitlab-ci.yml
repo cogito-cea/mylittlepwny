@@ -16,7 +16,7 @@ stages:
 image_build:
     stage: build_image
     script:
-      - docker build --tag haskell-aes:latest docker
+      - docker build --tag mylittlepwny:latest docker
 
 scarlet_build:
     stage: build
@@ -24,9 +24,9 @@ scarlet_build:
     # avec docker + gitlab c'est compliqué de maintenir les 'build artifacts'
     # entre les passes gitlab, et entre plusieurs exécutions d'un même conteneur
     # docker.  Donc acte, on fait tout dans un seul makefile.
-      - docker run --volume $(pwd):/haskell-aes --env LOCAL_USER_ID=$(id -u) --interactive haskell-aes:latest make test
+      - docker run --volume $(pwd):/mylittlepwny --env LOCAL_USER_ID=$(id -u) --interactive mylittlepwny:latest make test
 
 scarlet_cleanup:
     stage: cleanup
     script:
-      - docker run --rm --volume $(pwd):/haskell-aes --env LOCAL_USER_ID=$(id -u) --interactive haskell-aes:latest ls
+      - docker run --rm --volume $(pwd):/mylittlepwny --env LOCAL_USER_ID=$(id -u) --interactive mylittlepwny:latest ls

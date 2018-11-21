@@ -1,4 +1,4 @@
-name:                haskell-aes
+name:                mylittlepwny
 version:             0.3.0.0
 -- A short (one-line) description of the package.
 -- synopsis:
@@ -54,9 +54,9 @@ library
 
 executable cpa-hyps
   main-is:             cpa-hyps.hs
-  other-modules:       Paths_haskell_aes
+  other-modules:       Paths_mylittlepwny
   build-depends:       base
-                     , haskell-aes
+                     , mylittlepwny
                      , random
                      , optparse-applicative
   if !flag(debug)
@@ -71,7 +71,7 @@ executable cpa-hyps
 executable sca
   main-is:             sca.hs
   hs-source-dirs:      src
-  other-modules:       Paths_haskell_aes
+  other-modules:       Paths_mylittlepwny
                      , CLI
                      , CLI.Internal
                      , CPA
@@ -92,7 +92,7 @@ executable sca
                      , filepath
                      , folds
                      , formatting
-                     , haskell-aes
+                     , mylittlepwny
                      , optparse-applicative
                      , parallel
                      , text
@@ -133,7 +133,7 @@ test-suite tasty
                   , tasty
                   , tasty-hunit
                   , tasty-smallcheck
-                  -- haskell-aes dependencies
+                  -- mylittlepwny dependencies
                   , array
                   , bytestring
   default-language: Haskell2010
@@ -152,7 +152,7 @@ benchmark aes
   type: exitcode-stdio-1.0
   hs-source-dirs:   benchmarks
   main-is:          bench-aes.hs
-  build-depends:    haskell-aes
+  build-depends:    mylittlepwny
                   , base
                   , criterion
   default-language: Haskell2010
