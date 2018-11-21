@@ -6,9 +6,6 @@ module CLI.Internal
   , parseTextFile
   , parseKeyFile
   , TraceData(..)
-
-  -- * optparse-applicative
-  , Parser
   ) where
 
 import           Options.Applicative
