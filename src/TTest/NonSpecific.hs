@@ -26,7 +26,7 @@ import           Text.Printf                            (printf)
 
 import           CLI.Internal
 import qualified Folds                                  as F
-import qualified Traces.Raw                             as Traces
+import qualified Traces                                 as Traces
 
 default (T.Text)
 
@@ -35,12 +35,7 @@ default (T.Text)
 ttestNonSpecific :: TTestNonSpecificOptions -> IO ()
 ttestNonSpecific TTestNonSpecificOptions{..} = do
   -- importing data traces
-  (h, tmax') <- case traces of
-    TraceRawFile f -> do
-      h <- Traces.init f
-      return (h, Traces.size h)
-    -- TODO add support for traces in text format
-    TracesDir _ -> error "TODO -- unsupported trace format"
+  (loadfun, tmax') <- Traces.importTraces traces
 
   let traceDir = case traces of
         TraceRawFile f -> takeDirectory f
@@ -67,7 +62,7 @@ ttestNonSpecific TTestNonSpecificOptions{..} = do
   --    - sorting the two populations, lazily
   --    - take nbTraces in each population
   --  In this case, set the default value of nbTraces to 10000 (in CLI).
-  ts <- replicateM nbTraces $ Traces.load' h tmin tmax
+  ts <- replicateM nbTraces $ loadfun tmin tmax
 
   -- Each trace is associated to a class, described by an Int number.
   -- The classesFile describes the class descriptor associated to each

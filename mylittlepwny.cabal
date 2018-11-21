@@ -79,6 +79,9 @@ executable sca
                      , TTest
                      , TTest.NonSpecific
                      , TTest.Specific
+                     , Traces
+                     , Traces.Text
+                     , Traces.Internal
                      , Traces.Raw
                      , View
   build-depends:       base
@@ -95,6 +98,7 @@ executable sca
                      , mylittlepwny
                      , optparse-applicative
                      , parallel
+                     , split
                      , text
                      , vector
   hs-source-dirs:      .

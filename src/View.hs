@@ -3,6 +3,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 
 module View
   ( viewTraces
@@ -26,19 +27,14 @@ import           System.FilePath.Posix                  (takeDirectory, (</>))
 import           Text.Printf                            (printf)
 
 import           CLI.Internal
-import qualified Traces.Raw                             as Traces
+import qualified Traces                                 as Traces
 
 default (T.Text)
 
 viewTraces :: ViewOptions -> IO ()
 viewTraces ViewOptions{..} = do
   -- importing data traces
-  (h, tmax') <- case traces of
-    TraceRawFile f -> do
-      h <- Traces.init f
-      return (h, Traces.size h)
-    -- TODO add support for traces in text format
-    TracesDir _ -> error "TODO -- unsupported trace format"
+  (loadfun, tmax') <- Traces.importTraces traces
 
   let traceDir = case traces of
         TraceRawFile f -> takeDirectory f
@@ -56,11 +52,11 @@ viewTraces ViewOptions{..} = do
 
   -- load traces
   ts <- runConduit
-    $ repeatM (Traces.load' h tmin tmax)
+    $ repeatM (loadfun tmin tmax)
     .| takeC nbTraces
     .| sinkList
 
-  plotTraces (PlotOpts traceDir nbTraces tmin tmax) ts
+  plotTraces (PlotOpts traceDir nbTraces tmin tmax) (ts :: [Traces.Trace Float])
 
 
 data PlotOpts = PlotOpts

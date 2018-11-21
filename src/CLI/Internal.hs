@@ -9,10 +9,8 @@ module CLI.Internal
   ) where
 
 import           Options.Applicative
+import           Traces              (TraceData(..))
 
-data TraceData = TracesDir FilePath
-               | TraceRawFile FilePath
-               deriving (Show, Eq)
 
 -- * option parsers
 

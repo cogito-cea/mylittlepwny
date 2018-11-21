@@ -34,7 +34,7 @@ import           Aes.Hypothesis
 import           AesImport
 import           CLI.Internal
 import qualified Folds                                  as F
-import qualified Traces.Raw                             as Traces
+import qualified Traces                                 as Traces
 
 default (T.Text)
 
@@ -43,12 +43,7 @@ default (T.Text)
 ttestSpecific :: TTestSpecificOptions -> IO ()
 ttestSpecific TTestSpecificOptions{..} = do
   -- importing data traces
-  (h, tmax') <- case traces of
-    TraceRawFile f -> do
-      h <- Traces.init f
-      return (h, Traces.size h)
-    -- TODO add support for traces in text format
-    TracesDir _ -> error "TODO -- unsupported trace format"
+  (loadfun, tmax') <- Traces.importTraces traces
 
   let traceDir = case traces of
         TraceRawFile f -> takeDirectory f
@@ -87,7 +82,7 @@ ttestSpecific TTestSpecificOptions{..} = do
   key <- importKey keyFile
   texts <- take nbTraces <$> importTexts textFile
   -- MAYBE use conduit to interleave traces loading with computations
-  ts <- replicateM nbTraces $ Traces.load' h tmin tmax
+  ts <- replicateM nbTraces $ loadfun tmin tmax
 
   -- FIXME.  the version commented below does not work. the bit indices are messed up.  i.e. bit 0 ~> 24, bit 8 ~> 16, etc.
   -- let hyps = force [ bitPosSt bit $ firstSBOX key t | t <- texts ] `using` parList rseq

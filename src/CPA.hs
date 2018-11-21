@@ -1,5 +1,6 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module CPA
   ( cpa
@@ -29,7 +30,7 @@ import           Aes.Hypothesis
 import           AesImport
 import           CLI.Internal
 import           Folds
-import qualified Traces.Raw                             as Traces
+import qualified Traces                                 as Traces
 
 default (T.Text)
 
@@ -39,12 +40,7 @@ cpa :: CPAOptions -> IO ()
 cpa CPAOptions{..} = do
 
   -- importing data traces
-  (h, tmax') <- case traces of
-    TraceRawFile f -> do
-      h <- Traces.init f
-      return (h, Traces.size h)
-    -- TODO add support for traces in text format
-    TracesDir _ -> error "TODO -- unsupported trace format"
+  (loadfun, tmax') <- Traces.importTraces traces
 
   let traceDir = case traces of
         TraceRawFile f -> takeDirectory f
@@ -76,9 +72,9 @@ cpa CPAOptions{..} = do
 
   -- CPA analysis
   -- TODO fix workaround replicateM, use Conduit
-  ts <- replicateM nbTraces $ Traces.load' h tmin tmax
+  ts <- replicateM nbTraces $ loadfun tmin tmax
   let cs' = force ((map (\h -> flip run pearsonUx $ zip ts h) hyps) `using` parList rseq)
-  let (cs, cmaxs) = unzip cs'
+  let (cs :: [Traces.Trace Float], cmaxs) = unzip cs'
       abscs = [ U.map abs c | c <- cs ]
       maxs = U.fromList [ U.maximum x | x <- abscs ]
 
