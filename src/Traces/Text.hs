@@ -18,6 +18,7 @@ module Traces.Text
   , HasTraces
   ) where
 
+import           Control.Exception (evaluate)
 import           Data.List.Split (splitOn)
 import qualified Data.Vector.Unboxed  as U
 import           System.FilePath.Posix ((</>))
@@ -91,4 +92,7 @@ load' (HandleText tdir nref _nb) tmin tmax = do
   raw <- readFile $ tdir </> printf "trace_%09d.txt" n
   let xs = map read $ takeWhile (not . null) $ splitOn " " raw
   modifyIORef' nref (+1)
-  return $ U.fromList $ take (tmax-tmin) . drop (tmin-1) $ xs
+  -- force evaluation in WNHF so that the file descriptor is closed.
+  -- otherwise we would get: "openFile: resource exhausted (Too many
+  -- open files)"
+  evaluate $ U.fromList $ take (tmax - tmin) . drop (tmin-1) $ xs
