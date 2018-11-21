@@ -22,9 +22,9 @@ import           Control.Monad        (replicateM, when)
 import           Data.Binary.Get
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Vector.Unboxed  as U
-import qualified System.IO as IO
+import qualified System.IO            as IO
 
-import Traces.Internal
+import           Traces.Internal
 
 instance HasTraces HandleRaw where
   init = Traces.Raw.init
@@ -34,8 +34,8 @@ instance HasTraces HandleRaw where
   size = Traces.Raw.size
 
 data HandleRaw = HandleRaw
-  { handle :: IO.Handle
-  , sizeB :: !Int  -- ^ trace size, in bytes
+  { handle   :: IO.Handle
+  , sizeB    :: !Int  -- ^ trace size, in bytes
   , sampleNb :: !Int  -- ^ trace size, in elements
   }
 
@@ -90,7 +90,7 @@ load' HandleRaw{..} tmin tmax = do
   return $ runGet getTrace raw
   where
     getTrace :: (U.Unbox a, Num a) => Get (Trace a)
-    getTrace = U.fromList . map fromIntegral . take (tmax-tmin) . drop (tmin-1) <$> replicateM sampleNb getInt16host
+    getTrace = U.fromList . map fromIntegral . take (tmax - tmin) . drop (tmin-1) <$> replicateM sampleNb getInt16host
 
 -- | Close the trace handler.  Actually, this function does nothing.
 close :: HandleRaw -> IO ()

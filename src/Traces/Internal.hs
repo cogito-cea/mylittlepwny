@@ -1,6 +1,6 @@
 module Traces.Internal where
 
-import qualified Data.Vector.Unboxed  as U
+import qualified Data.Vector.Unboxed as U
 
 type Trace a = U.Vector a
 

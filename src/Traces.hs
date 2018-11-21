@@ -6,11 +6,11 @@ module Traces
   )
 where
 
-import Prelude hiding (init)
-import qualified Data.Vector.Unboxed  as U
+import qualified Data.Vector.Unboxed as U
+import           Prelude             hiding (init)
 
-import Traces.Raw
-import Traces.Text
+import           Traces.Raw
+import           Traces.Text
 
 data TraceData = TracesDir FilePath
                | TraceRawFile FilePath

@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards   #-}
 
 -- |
 -- Module      :  Traces.Text
@@ -18,14 +18,15 @@ module Traces.Text
   , HasTraces
   ) where
 
-import           Control.Exception (evaluate)
-import           Data.List.Split (splitOn)
-import qualified Data.Vector.Unboxed  as U
+import           Control.Exception     (evaluate)
+import           Data.IORef            (IORef, modifyIORef', newIORef,
+                                        readIORef)
+import           Data.List.Split       (splitOn)
+import qualified Data.Vector.Unboxed   as U
 import           System.FilePath.Posix ((</>))
-import           Data.IORef (IORef, newIORef, readIORef, modifyIORef')
 import           Text.Printf           (printf)
 
-import Traces.Internal
+import           Traces.Internal
 
 instance HasTraces HandleText where
   init = Traces.Text.init
@@ -37,8 +38,8 @@ instance HasTraces HandleText where
 
 data HandleText = HandleText
   { tracesDir :: !FilePath
-  , counter :: IORef Int
-  , sampleNb :: !Int  -- ^ trace size, in elements
+  , counter   :: IORef Int
+  , sampleNb  :: !Int  -- ^ trace size, in elements
   }
 
 {-| The trace file has the following format:
