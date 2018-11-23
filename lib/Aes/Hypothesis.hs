@@ -74,10 +74,18 @@ fstSBOX' :: Byte -> Word8 -> [Plaintext] -> [Word8]
 fstSBOX' byte k txts = [subByte $ xor b k | b <- txtbyte]
   where
     txtbyte = [(bytes txt) !! byte | txt <- txts]
+{-# INLINABLE fstSBOX' #-}
+
+fstSBOX'' :: Byte -> Word8 -> Plaintext -> Word8
+fstSBOX'' byte k txt = subByte $ xor txtbyte k
+  where
+    txtbyte = (bytes txt) !! byte
+{-# INLINABLE fstSBOX'' #-}
 
 -- | Power model: compute the hamming weight.
 hammingWeight :: [[Word8]] -> [[Int]]
 hammingWeight = (fmap.fmap) popCount
+{-# INLINABLE hammingWeight #-}
 
 -- | Export the matrix of CPA/DPA hypothesis in a text file, using a
 --   textual decimal representation.

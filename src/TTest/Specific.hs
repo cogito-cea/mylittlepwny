@@ -1,8 +1,6 @@
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DuplicateRecordFields      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
-{-# LANGUAGE RecordWildCards            #-}
+{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 
 module TTest.Specific
   ( ttestSpecific
@@ -12,11 +10,8 @@ module TTest.Specific
   , cmdTTestSParser
   ) where
 
-import           Control.DeepSeq                        (force)
-import           Control.Monad                          (replicateM)
-import           Control.Parallel.Strategies
+import           Conduit
 import           Data.Bits                              (Bits, shiftR, (.&.))
-import           Data.Fold
 import           Data.Maybe                             (fromMaybe)
 import qualified Data.Text                              as T
 import qualified Data.Vector.Unboxed                    as U
@@ -29,12 +24,11 @@ import           System.FilePath.Posix                  (takeDirectory, (</>))
 import           Text.Printf                            (printf)
 
 import           Aes
-import           Aes.Bits
 import           Aes.Hypothesis
 import           AesImport
 import           CLI.Internal
-import qualified Folds                                  as F
 import qualified Traces                                 as Traces
+import           TTest.Internal
 
 default (T.Text)
 
@@ -60,48 +54,63 @@ ttestSpecific TTestSpecificOptions{..} = do
   fprint fter "Specific t-test on bit: " targetBit
   fprint "\n"
 
-  -- TTEST analysis
-  --
-  -- TODO we should take nbTraces for each population,
-  --  i.e.,
-  --    - reading lazily the traces
-  --    - sorting the two populations, lazily
-  --    - take nbTraces in each population
-  --  In this case, set the default value of nbTraces to 10000 (in CLI).
-  let partition :: L' (Word8, Traces.Trace Float) ([Traces.Trace Float], [Traces.Trace Float])
-      partition = L' done step begin
-      begin = ([], [])
-      step :: ([a], [a]) -> (Word8, a) -> ([a], [a])
-      step (p0, p1) (c, x) =
-        if (c == 0)
-        then (p0 ++ [x], p1)
-        else (p0, p1 ++ [x])
-      done = id
+  -- t-test analysis
+  -- ---------------
 
-  -- compute the key hypothesis
+  -- state hypothesis, built from the knowledge of the plaintext and key values
   key <- importKey keyFile
-  texts <- take nbTraces <$> importTexts textFile
-  -- MAYBE use conduit to interleave traces loading with computations
-  ts <- replicateM nbTraces $ loadfun tmin tmax
-
-  -- FIXME.  the version commented below does not work. the bit indices are messed up.  i.e. bit 0 ~> 24, bit 8 ~> 16, etc.
-  -- let hyps = force [ bitPosSt bit $ firstSBOX key t | t <- texts ] `using` parList rseq
 
   let targetByte = targetBit `div` 8
-      k = getByte targetByte $ toAesText key
+      targetBitInByte = targetBit `rem` 8
+      keyByte = getByte targetByte $ toAesText key
       getBit :: (Bits a, Num a) => Int -> a -> a
       getBit b w = w `shiftR` b .&. 0x1
-      hyps = force (map (getBit $ targetBit `rem` 8) (fstSBOX' targetByte k texts)) `using` parList rseq
 
-  let (pop0, pop1) = flip run partition $ zip hyps ts
+      stateHypothesis :: Word8  -- ^ key byte
+                      -> Plaintext
+                      -> Word8  -- ^ bit value in the output of the first sbox
+      stateHypothesis k t = getBit targetBitInByte $ fstSBOX'' targetByte k t
 
-  let tvals = flip run F.ttestU $ zip pop0 pop1
+  -- List of texts.  Our input file is a rather small file, so it may
+  -- no be necessary to load it in the conduit stream.
+  texts <- take nbTraces <$> importTexts textFile
+
+  let loadTraces :: MonadIO m => ConduitT () (Traces.Trace Float) m ()
+      loadTraces = repeatMC (liftIO $ loadfun tmin tmax)
+
+      loadTracePairs :: MonadResource m => ConduitT () (Pair Plaintext (Traces.Trace Float)) m ()
+      loadTracePairs = getZipSource
+                       $ Pair
+                       <$> ZipSource (yield texts .| concatMapC id )
+                       <*> ZipSource loadTraces
+
+      -- TTTrace selectors
+      separateTraces :: (Pair Plaintext (Traces.Trace Float)) -> TTTrace
+      separateTraces (Pair x t) =
+        case stateHypothesis keyByte x of
+          0 -> TTTrace Pop0 t
+          1 -> TTTrace Pop1 t
+          -- we should never land here, but YMMV ;)
+          _ -> error "TTest.Specific.separatetraces: unexpected bit value"
+
+      buildTTestTraces :: Monad m => ConduitT (Pair Plaintext (Traces.Trace Float)) TTTrace m ()
+      buildTTestTraces = mapC separateTraces
+
+  tvalues <- runResourceT
+             $ runConduit
+             $ loadTracePairs
+             .| takeC nbTraces
+             .| buildTTestTraces
+             .| ttest
 
   -- plot t-test results
   -- ----------------
   let plotOpts = PlotTTest traceDir nbTraces tmin tmax targetBit
-  plotTTest plotOpts tvals
-  return ()
+  plotTTest plotOpts tvalues
+
+-- a strict pair
+data Pair a b = Pair !a !b
+
 
 data PlotTTest = PlotTTest
   { plotDir  :: FilePath
@@ -111,7 +120,8 @@ data PlotTTest = PlotTTest
   , bitNb    :: Int
   }
 
--- | TODO
+-- * plot the t-test results
+
 plotTTest :: (Num a, PlotValue a, RealFloat a, Show a, U.Unbox a)
   => PlotTTest -> (U.Vector a) -> IO ()
 plotTTest PlotTTest{..} ts = do
@@ -131,6 +141,7 @@ plotTTest PlotTTest{..} ts = do
                      ]
 
 -- * CLI options
+
 data TTestSpecificOptions = TTestSpecificOptions
   { traces    :: !TraceData
   , tmin      :: !Int          -- ^ the number of the first sample used

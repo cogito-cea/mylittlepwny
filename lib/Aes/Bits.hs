@@ -15,6 +15,8 @@ import           Data.Bits (shiftR, (.&.), Bits)
 import           Aes.Types
 
 -- | a bit value extracted from Aes input, intermediate or output variables
+--
+--   MAYBE data Bit = Zero | One
 newtype Bit = Bit Int
   deriving (Bits, Eq, Ord, Read, Show, Enum, Num, NFData)
 

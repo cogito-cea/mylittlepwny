@@ -62,6 +62,7 @@ ttestNonSpecific TTestNonSpecificOptions{..} = do
       toClass :: BC.ByteString -> Class
       toClass "0" = Pop0
       toClass "1" = Pop1
+      -- we should never land here, but YMMV ;)
       toClass _   = error "TTest.NonSpecific.toClass: unknown class value"
 
       loadTTestTraces :: MonadResource m => ConduitT () TTTrace m ()
