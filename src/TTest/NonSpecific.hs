@@ -11,7 +11,6 @@ module TTest.NonSpecific
 
 import           Conduit
 import qualified Data.ByteString.Char8                  as BC
-import           Data.Maybe                             (catMaybes)
 import           Data.Maybe                             (fromMaybe)
 import qualified Data.Text                              as T
 import qualified Data.Vector.Unboxed                    as U
@@ -31,9 +30,8 @@ default (T.Text)
 -- | t-test analysis
 ttestNonSpecific :: TTestNonSpecificOptions -> IO ()
 ttestNonSpecific TTestNonSpecificOptions{..} = do
-  -- importing data traces
+  -- prepare traces loading
   (loadfun, tmax') <- Traces.importTraces traces
-
   let traceDir = case traces of
         TraceRawFile f -> takeDirectory f
         TracesDir d    -> d
@@ -51,39 +49,37 @@ ttestNonSpecific TTestNonSpecificOptions{..} = do
   fprint fters "Classes description file: " classesFile
   fprint "\n"
 
-  -- TTEST analysis
-  --
-  -- MAYBE set the default value of nbTraces to 10000 (in CLI).
-
-  let loadTraces :: MonadIO m => ConduitT i (Traces.Trace Float) m ()
+  -- t-test analysis
+  let loadTraces :: MonadIO m => ConduitT () (Traces.Trace Float) m ()
       loadTraces = repeatMC (liftIO $ loadfun tmin tmax)
 
-      loadClasses :: MonadResource m => ConduitT i Int m ()
+      loadClasses :: MonadResource m => ConduitT i Class m ()
       loadClasses = sourceFile classesFile
-                     .| concatMapC (catMaybes . map (fmap fst . BC.readInt) . BC.words)
+                     .| concatMapC (map toClass . BC.words)
 
-      loadTTestTraces :: MonadResource m => ConduitT () Trace m ()
+      -- the file classesFile is loaded as a ByteString, which
+      -- contains either chars 0 or 1.
+      toClass :: BC.ByteString -> Class
+      toClass "0" = Pop0
+      toClass "1" = Pop1
+      toClass _   = error "TTest.NonSpecific.toClass: unknown class value"
+
+      loadTTestTraces :: MonadResource m => ConduitT () TTTrace m ()
       loadTTestTraces = getZipSource
-        $ Trace
+        $ TTTrace
         <$> ZipSource loadClasses
         <*> ZipSource loadTraces
-
-      -- Trace selectors
-      selectPop0, selectPop1 :: Trace -> Bool
-      selectPop0 (Trace n _) = n == 0
-      selectPop1 (Trace n _) = n == 1
 
   tvalues <- runResourceT
              $ runConduit
              $ loadTTestTraces
              .| takeC nbTraces
-             .| ttest selectPop0 selectPop1
+             .| ttest
 
   -- plot t-test results
-  -- ----------------
   let plotOpts = PlotTTest traceDir nbTraces tmin tmax
   plotTTest plotOpts tvalues
-  return ()
+
 
 -- * plot the t-test results
 
@@ -117,6 +113,7 @@ data TTestNonSpecificOptions = TTestNonSpecificOptions
   { traces      :: !TraceData
   , tmin        :: !Int          -- ^ the number of the first sample used
   , mtmax       :: !(Maybe Int)  -- ^ the number of the latest sample used
+  -- MAYBE set the default value of nbTraces to 20000 (in CLI).
   , nbTraces    :: !Int          -- ^ number of traces used for the CPA analysis
   , classesFile :: !FilePath
   } deriving (Show)
