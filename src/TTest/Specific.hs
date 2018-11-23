@@ -122,7 +122,7 @@ plotTTest PlotTTest{..} ts = do
                   </> printf "TTest-S n:%d tmin:%05d tmax:%05d b:%03d.png" plotSize plotTmin plotTmax bitNb
   fprint ("\nRendering the TTest plot in: " % string % " \n") graphFile
   toFile def graphFile $ do
-    layout_title .= printf "Non-specific t-test - output of the first SBOX on bit %d. Computation for %d traces." bitNb plotSize
+    layout_title .= printf "Specific t-test - output of the first SBOX on bit %d. Computation for %d traces." bitNb plotSize
     setColors [ opaque grey, opaque black]
     plot $ line "t-value" $ [ zip abscissa $ U.toList $ ts ]
     setColors [ opaque blue, opaque blue]
