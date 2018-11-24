@@ -11,7 +11,6 @@ module CPA
   ) where
 
 import           Control.Concurrent.Async
-import           Control.DeepSeq                        (force)
 import           Control.Monad                          (replicateM)
 import           Control.Parallel.Strategies
 import           Data.Bits                              (popCount)
@@ -73,7 +72,7 @@ cpa CPAOptions{..} = do
   -- CPA analysis
   -- TODO fix workaround replicateM, use Conduit
   ts <- replicateM nbTraces $ loadfun tmin tmax
-  let cs' = force ((map (\h -> flip run pearsonUx $ zip ts h) hyps) `using` parList rseq)
+  let cs' = (map (\h -> flip run pearsonUx $ zip ts h) hyps) `using` parList rdeepseq
   let (cs :: [Traces.Trace Float], cmaxs) = unzip cs'
       abscs = [ U.map abs c | c <- cs ]
       maxs = U.fromList [ U.maximum x | x <- abscs ]
