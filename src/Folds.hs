@@ -27,8 +27,9 @@ module Folds
   -- * vector implementations, for Data.Vector.Unboxed
   , meanU
   , ttestU
-  , pearsonUU
   , pearsonUx
+  , pearsonUU
+  , pearsonUUx
 
   -- re-exports
   , run
@@ -245,6 +246,35 @@ pearsonUU = L' done step begin
     done (PS _ _ _ sxx sxy syy) =
       U.zipWith (/) sxy $ U.map sqrt $ U.zipWith (*) sxx syy
 {-# INLINABLE pearsonUU #-}
+
+pearsonUUx :: (Floating a, Ord a, U.Unbox a) => L' (U.Vector a, U.Vector a) (U.Vector a, U.Vector a)
+pearsonUUx = L' done step begin
+  where
+    begin = PSUx 0 U.empty U.empty U.empty U.empty U.empty U.empty
+    step (PSUx 0 _ _ _ _ _ _) (x, y) = PSUx 1 x y sxx' sxy' syy' max'
+      where
+        zeros = U.map (const 0) x -- Assuming the two vectors have the same size
+        sxx' = zeros -- sxx + devx*(x - xbar') = 0 + x * (x - x)
+        sxy' = zeros
+        syy' = zeros
+        max' = U.fromList [1] -- all correlation values are supposed to be '1' at the beginning.
+    step (PSUx n xbar ybar sxx sxy syy m) (x, y) = PSUx n' xbar' ybar' sxx' sxy' syy' max'
+      where
+        n' = n + 1
+        devx = U.zipWith (-) x xbar
+        devy = U.zipWith (-) y ybar
+        xbar' = U.map (/ fromIntegral n') $ U.zipWith (+) xbar devx
+        ybar' = U.map (/ fromIntegral n') $ U.zipWith (+) ybar devy
+        sxx' = U.zipWith (+) sxx $ U.zipWith (*) devx $ U.zipWith (-) x xbar'
+        sxy' = U.zipWith (+) sxy $ U.zipWith (*) devx $ U.zipWith (-) y ybar'
+        syy' = U.zipWith (+) syy $ U.zipWith (*) devy $ U.zipWith (-) y ybar'
+        c = U.zipWith (/) sxy $ U.map sqrt $ U.zipWith (*) sxx syy
+        max' = m `U.snoc` U.maximum c
+    done (PSUx _ _ _ sxx sxy syy m) =
+      ( U.zipWith (/) sxy $ U.map sqrt $ U.zipWith (*) sxx syy
+      , m
+      )
+{-# INLINABLE pearsonUUx #-}
 
 {-| Pearson's correlation between a stream of vectors and a stream of scalars.
 

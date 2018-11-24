@@ -92,6 +92,7 @@ executable sca
                      , binary
                      , bytestring
                      , conduit
+                     , deepseq
                      , filepath
                      , folds
                      , formatting
