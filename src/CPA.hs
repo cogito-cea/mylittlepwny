@@ -60,33 +60,30 @@ cpa CPAOptions{..} = do
     Nothing -> return $ stringImport  "0X01 0X23 0X45 0X67 0X89 0XAB 0XCD 0XEF 0X12 0X34 0X56 0X78 0X9A 0XBC 0XDE 0XF0"
     Just f  -> importKey f
 
-  texts <- importTexts textFile :: IO [Plaintext]
-
-  let keyHyps = [0..255]
-      byte = byteOpt
-      secret = fromIntegral $ getByte byte $ toAesText key
-      txts = take nbTraces texts
-      hyps' = [ popCount <$> fstSBOX' byte k txts | k <- keyHyps]
-      hyps = [map fromIntegral h | h <- hyps']
+  texts <- take nbTraces <$> importTexts textFile :: IO [Plaintext]
+  traces <- replicateM nbTraces $ loadfun tmin tmax
 
   -- CPA analysis
   -- TODO fix workaround replicateM, use Conduit
-  ts <- replicateM nbTraces $ loadfun tmin tmax
-  let cs' = (map (\h -> flip run pearsonUx $ zip ts h) hyps) `using` parList rdeepseq
-  let (cs :: [Traces.Trace Float], cmaxs) = unzip cs'
-      abscs = [ U.map abs c | c <- cs ]
-      maxs = U.fromList [ U.maximum x | x <- abscs ]
+  let keyHyps = [0..255]
+      hyps = [ (fromIntegral . popCount) <$> fstSBOX' byteOpt k texts | k <- keyHyps]
+      corrs = (map (\h -> flip run pearsonUx $ zip traces h) hyps)
+        `using` (parList) rdeepseq
+      (rs :: [Traces.Trace Float], cmaxs) = unzip corrs
+      abscs = [ U.map abs r | r <- rs ]
+      maxs = U.fromList [ U.maximum r | r <- abscs ]
 
   fprint ("Max correlation value: " % float % " \n") $ U.maximum maxs
   fprint ("   found for key byte #" % float % " \n") $ U.maxIndex maxs
 
   -- plot CPA results
   -- ----------------
-  let plotOpts = PlotCPA traceDir byte nbTraces tmin tmax
+  let plotOpts = PlotCPA traceDir byteOpt nbTraces tmin tmax
+      secret = fromIntegral $ getByte byteOpt $ toAesText key
   concurrently_
     (
       -- courbe (correlation, #sample); projection sur chaque instant d'échantillonnage pour le nombre max d'itérations
-      plotCPAT plotOpts (CorrelationSKey $ cs !! secret) (CorrelationHyps $ deleteAt secret cs)
+      plotCPAT plotOpts (CorrelationSKey $ rs !! secret) (CorrelationHyps $ deleteAt secret rs)
     )
     (
       -- courbe (correlation, #trace); projection sur le nombre de traces
