@@ -18,7 +18,7 @@ image_build:
     script:
       - docker build --tag mylittlepwny:latest docker
 
-scarlet_build:
+mylittlepwny_build:
     stage: build
     script:
     # avec docker + gitlab c'est compliqué de maintenir les 'build artifacts'
@@ -26,7 +26,7 @@ scarlet_build:
     # docker.  Donc acte, on fait tout dans un seul makefile.
       - docker run --volume $(pwd):/mylittlepwny --env LOCAL_USER_ID=$(id -u) --interactive mylittlepwny:latest make test
 
-scarlet_cleanup:
+mylittlepwny_cleanup:
     stage: cleanup
     script:
       - docker run --rm --volume $(pwd):/mylittlepwny --env LOCAL_USER_ID=$(id -u) --interactive mylittlepwny:latest ls
