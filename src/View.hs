@@ -83,8 +83,9 @@ data PlotOpts = PlotOpts
 
 -- | plot Pearson's correlation.  Computation for n traces.
 --
--- MAYBE use conduit
+-- MAYBE integrate plot functions to the conduit 'stream'
 --    plotTraces :: (...) => PlotOpts -> ConduitT (Trace a) () m ()
+--
 plotTraces :: (Num a, PlotValue a, RealFloat a, Show a, U.Unbox a)
   => PlotOpts -> Traces.Trace a -> IO ()
 plotTraces PlotOpts{..} ts = do

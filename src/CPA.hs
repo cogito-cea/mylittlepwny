@@ -261,3 +261,4 @@ deleteAt n xs = let (ys, zs) = splitAt n xs
 
 -- MAYBE. add performance tests with criterion.  bench the performance of this implementation.
 -- MAYBE. replace lists with V.Vector, e.g. [PState] -> V.Vector PState
+-- MAYBE. add the possibility to export analysis results as binary files.  The analysis results could be re-imported for further analysis, or for offline plotting
