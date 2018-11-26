@@ -68,8 +68,8 @@ executable cpa-hyps
   if flag(development)
     ghc-options:    -Wall
 
-executable sca
-  main-is:             sca.hs
+executable mylittlepwny
+  main-is:             mylittlepwny.hs
   hs-source-dirs:      src
   other-modules:       Paths_mylittlepwny
                      , CLI
