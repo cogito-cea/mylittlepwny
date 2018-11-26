@@ -82,10 +82,10 @@ cpa CPAOptions{..} = do
       loadTraces = repeatMC (liftIO $ loadfun tmin tmax)
 
       hypothesis :: Plaintext -> [Float]
-      hypothesis t = [ fromIntegral . popCount
-                       -- ^ Hamming Weight
+      hypothesis t = [ -- Hamming Weight
+                       fromIntegral . popCount
+                       -- output of the first SBOX
                        $ fstSBOX'' byteOpt k t | k <- [0..255]
-                       -- ^ output of the first SBOX
                      ]
 
   corrs <- runConduit
