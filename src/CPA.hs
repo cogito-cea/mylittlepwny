@@ -252,6 +252,9 @@ cmdCPAParser =
 
 -- | Delete element at index 'n' from the list.
 --   This function is not safe if index 'n' is greater than the length of the input list.
+--
+-- >>> deleteAt 2 [0,1,2,3]
+-- [0,1,3]
 deleteAt :: Int -> [a] -> [a]
 deleteAt n xs = let (ys, zs) = splitAt n xs
                 in  ys ++ tail zs
