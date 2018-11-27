@@ -9,24 +9,23 @@ before_script:
     - git submodule update --init --recursive
 
 stages:
-    - build_image
+    - build-docker-base
+    - test
     - build
-    - cleanup
 
-image_build:
-    stage: build_image
+docker_build:
+    stage: build-docker-base
     script:
-      - docker build --tag mylittlepwny:latest docker
+      - docker build --tag mylittlepwny:build docker
 
 mylittlepwny_build:
+    stage: test
+    script:
+      - stack --docker build
+      - stack --docker test
+
+image_build:
     stage: build
     script:
-    # avec docker + gitlab c'est compliqué de maintenir les 'build artifacts'
-    # entre les passes gitlab, et entre plusieurs exécutions d'un même conteneur
-    # docker.  Donc acte, on fait tout dans un seul makefile.
-      - docker run --volume $(pwd):/mylittlepwny --env LOCAL_USER_ID=$(id -u) --interactive mylittlepwny:latest make test
+      - stack --docker image container
 
-mylittlepwny_cleanup:
-    stage: cleanup
-    script:
-      - docker run --rm --volume $(pwd):/mylittlepwny --env LOCAL_USER_ID=$(id -u) --interactive mylittlepwny:latest ls

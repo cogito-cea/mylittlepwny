@@ -1,4 +1,7 @@
 all: build
+
+GITCOMMIT:=$(shell git log -1 --pretty=format:"%h")
+
 test: build
 	stack test
 build: setup
@@ -7,4 +10,9 @@ setup:
 	stack setup
 clean:
 	stack clean
-.PHONY: all setup build test
+
+release:
+	stack --docker build
+	stack image container
+	docker save -o mylittlepwny-3034931.tar.gz mylittlepwny:latest
+.PHONY: all setup build test release

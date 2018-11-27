@@ -33,3 +33,31 @@ extra-package-dbs: []
 # Extra directories used by stack for building
 # extra-include-dirs: [/path/to/dir]
 # extra-lib-dirs: [/path/to/dir]
+
+docker:
+    # docker is disabled by default.  use stack's docker integration with 'stack --docker'
+    enable: false
+
+image:
+  # build the image with stack --docker image container
+
+  # You need a `containers` yaml section for `stack image container`.
+  # A `container` section that does not contain a list is also valid.
+  containers:
+
+    # This example just has one container.
+    -
+      # You need a base image name. Stack layers exes on top of
+      # the base image. Prepare your project image in advance by
+      # putting all your runtime dependencies in the image.
+      base: "mylittlepwny:build"
+
+      # Optionally add a directory to a path inside the docker image.
+      # add:
+      #   traces/: /traces/
+
+      # Optionally specify a list of executables. Stack will create
+      # a tagged image for each in the list. these images will have
+      # their respective "ENTRYPOINT" set.
+      executables:
+        - mylittlepwny
