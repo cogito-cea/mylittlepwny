@@ -1,123 +1,517 @@
-An implementation of the AES block cipher in Haskell.  The purpose of
-this implementation is to perform some fast prototyping on algorithms
-based on AES.
+#+TITLE:     mylittlepwny
+#+AUTHOR:    Damien Couroussé -- CEA
+#+EMAIL:     damien.courousse@cea.fr
+#+DESCRIPTION:
+#+KEYWORDS:
+#+LANGUAGE:  en
+#+OPTIONS:   H:3 num:t toc:2 \n:nil @:t ::t |:t ^:t -:t f:t *:t <:t
+#+OPTIONS:   TeX:t LaTeX:t skip:nil d:nil todo:t pri:nil tags:not-in-toc
+#+OPTIONS:   email:t
+#+EXPORT_SELECT_TAGS: export
+#+EXPORT_EXCLUDE_TAGS: noexport
+#+LINK_UP:
+#+LINK_HOME:
+#+startup: beamer
+#+LaTeX_CLASS: beamer
+#+LaTeX_CLASS_OPTIONS: [8pt]
 
-The implementation of the =AesReference= module is based on the blog
-post [[http://unconceived.net/blog/2015/01/29/aes-reference-haskell.html][AES reference implementation in Haskell]], by Justin Handville.  It
-is located in the module =AES=, plus a few other things.
+# export pdf: C-c C-e l O   //   org-beamer-export-to-pdf
 
-The source code also contains a small program, =cpa-hyps=, designed to
-compute a few things for side channel attacks: input hypothesis for
-CPA correlation computation, sets of input plaintexts for t-test
-evaluations, etc.
+#+ATTR_LATEX: :options basicstyle=\ttfamily\scriptsize
 
-******** TODO  firstsbox. option plaintext. si pas définie, on créé le fichier plaintexts en même temps et on sort le fichier
+* mylittlepwny
+
+** Setup, build, test
+
+*** Get the source code
+
+bla
+
+******** TODO repo pour le code source
     :PROPERTIES:
-         :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
-         :END:
+   :TRIGGER:  chain-find-next(TODO,todo-only)
+   :END:
 
-******** TODO [#A] revoir les arguments de chaque commande (pour tout ce qui n'est pas optionnel)
-    :PROPERTIES:
-  :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
-  :END:
+*** Build that thing
 
-******** TODO [#C] ajouter une commande pour afficher le numéro de version
-    :PROPERTIES:
-  :TRIGGER:  chain-find-next(TODO,todo-only,from-bottom)
-  :END:
+Two options.  Either build and run with =stack=, or using a docker
+image.
 
-* required dependencies
+**** Using =stack=
 
-- [[https://docs.haskellstack.org][stack]]  (Debian package =haskell-stack=)
+ Install =stack=.  Follow the documentation [[https://docs.haskellstack.org/en/stable/README/#how-to-install][here]].
 
-* build & run
+ Then run, from the root of the source directory:
+ #+BEGIN_EXAMPLE
+ stack setup
+ stack build
+ #+END_EXAMPLE
 
-** build
+ You can install =mylittlepwny= locally in =$HOME/.local/bin= with:
+ #+BEGIN_EXAMPLE
+ stack install
+ #+END_EXAMPLE
 
-#+BEGIN_SRC sh
-make build
-#+END_SRC
+**** With docker
 
-** install and/or update
+Load the docker image:
+#+BEGIN_EXAMPLE
+$ docker load -i mylittlepwny-<GITCOMMIT>.tar.gz
+#+END_EXAMPLE
 
-#+BEGIN_SRC sh
-$ make install
-#+END_SRC
+Run it:
+#+BEGIN_EXAMPLE
+$ docker run -it --rm mylittlepwny bash
+Starting with UID : 9001
+dockeruser@9e2f8654b323:/mylittlepwny$ mylittlepwny --help
+Usage: mylittlepwny [--version] COMMAND
+  CPA from on-disk traces
 
-… will copy the executable =cpa-hyps= in =$HOME/.local/bin=.  You
-then need to add this directory in your =PATH= variable.
+Available options:
+  -h,--help                Show this help text
+  --version                Show version
 
-You can also use =make install= to install a new version of =cpa-hyps=
-in =$HOME/.local/bin=.
+Available commands:
+  view                     View traces
+  cpa                      CPA analysis
+  ttest                    Non-specific t-test
+  specific                 Specific t-test
+dockeruser@9e2f8654b323:/mylittlepwny$
+#+END_EXAMPLE
 
-** =cpa-hyps=
+** Format of the side-channel traces
 
-Overview of program options:
-#+BEGIN_SRC sh
-make run
-#+END_SRC
+*** Format of the side-channel traces: raw files
 
-*** general usage and global options
-
-Once you have run =make install=, option =--help= gives an overview of
-=cpa-hyps='s general usage and of the global options it supports.
-Currently:
+A raw file contains:
+- a small header of two 32-bit =unsigned int=:
+  - number of samples per side-channel trace
+  - byte size of each sample.
+- the stream of samples
 
 #+BEGIN_EXAMPLE
-$ cpa-hyps --help
+# header:
+<number of samples> <sample size>
+# the stream of samples
+<sample> <sample> <sample>
+#+END_EXAMPLE
+
+*** Format of the side-channel traces: text files
+
+All files are located in the same directory, and each text file is
+expected to contain the samples of one side-channel trace.
+Sample values are represented with a textual, decimal representation.
+
+#+BEGIN_EXAMPLE
+<TRACEDIR>/trace_000000000.txt
+<TRACEDIR>/trace_000000001.txt
+<TRACEDIR>/trace_000000002.txt
+<TRACEDIR>/trace_000000003.txt
+<TRACEDIR>/trace_000000004.txt
+<TRACEDIR>/trace_000000005.txt
+<TRACEDIR>/trace_000000006.txt
+<TRACEDIR>/trace_000000007.txt
+<TRACEDIR>/trace_000000008.txt
+<TRACEDIR>/trace_000000009.txt
+#+END_EXAMPLE
+
+** Tests
+
+A small sample set of side-channel traces is provided with the source
+code, for test purposes, in directory =tests/traces=.
+
+*** Test: view traces
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny view -f tests/traces/unprotected.raw  -n 16
+View Settings:
+average over:               16
+tmin:                        0
+tmax:                     1000
+first trace:                 0
+
+Rendering the view plot in: tests/traces/Traces avg:16 n:0 tmin:00000 tmax:01000.png
+#+END_EXAMPLE
+
+*** Test: CPA
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny cpa -f tests/traces/unprotected.raw -t tests/traces/plaintexts.txt -n 100
+CPA Settings:
+number of traces:          100
+tmin:                        0
+tmax:                     1000
+
+Max correlation value: 0.6940127611160278
+   found for key byte #1.0
+
+Rendering the CPA plot in: tests/traces/CPA-T byte:0 n:100 tmin:00000 tmax:01000.png
+Rendering the CPA plot in: tests/traces/CPA-D byte:0 n:100 tmin:00000 tmax:01000.png
+#+END_EXAMPLE
+
+*** Test: non-specific t-test
+
+would require a set of side-channel of trace that is different from
+the set of traces provided in the =tests= directory.
+
+*** Test: specific t-test
+
+Caution note: you need more side-channel traces to get something
+interesting out of this.
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny specific -f tests/traces/unprotected.raw -t tests/traces/plaintexts.txt -k tests/traces/key.txt -n 100 -b 0
+Specific t-test.  Settings:
+Total number of traces:        100
+tmin:                            0
+tmax:                         1000
+Specific t-test on bit:          0
+
+Rendering the TTest plot in: tests/traces/TTest-S n:100 tmin:00000 tmax:01000 b:000.png
+#+END_EXAMPLE
+
+** Side-Channel Analysis
+
+*** Tool usage #1
+
+Getting help:
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny --help
+Usage: mylittlepwny [--version] COMMAND
+  CPA from on-disk traces
+
+Available options:
+  -h,--help                Show this help text
+  --version                Show version
+
+Available commands:
+  view                     View traces
+  cpa                      CPA analysis
+  ttest                    Non-specific t-test
+  specific                 Specific t-test
+#+END_EXAMPLE
+
+*** Tool usage #2
+
+Getting  help for  a specific command:
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny COMMAND --help
+#+END_EXAMPLE
+
+e.g.:
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny view --help
+Usage: mylittlepwny view ((-d|--traces-dir TRACES_DIR) |
+                         (-f|--trace-rawfile TRACE_RAWFILE)) [--tmin TMIN]
+                         [--tmax TMAX] [-n|--average-over AVG_SIZE]
+                         [-m|--first-trace FIRST_TRACES]
+  View traces
+
+Available options:
+  -d,--traces-dir TRACES_DIR
+                           Location of the directory with traces files, in
+                           textual format.
+  -f,--trace-rawfile TRACE_RAWFILE
+                           Location of the trace files, in raw format.
+  --tmin TMIN              Sample number for the start of the observation window
+                           [default: 0].
+  --tmax TMAX              Sample number for the end of the observation window
+                           [default: full trace length].
+  -n,--average-over AVG_SIZE
+                           Compute an average over AVG_SIZE traces [default: 1]
+  -m,--first-trace FIRST_TRACES
+                           Number of the first trace to consider [default: 0]
+  -h,--help                Show this help text
+#+END_EXAMPLE
+
+*** View traces
+
+The command =view= plots traces for visual inspection.
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny view --help
+Usage: mylittlepwny view ((-d|--traces-dir TRACES_DIR) |
+                         (-f|--trace-rawfile TRACE_RAWFILE)) [--tmin TMIN]
+                         [--tmax TMAX] [-n|--average-over AVG_SIZE]
+                         [-m|--first-trace FIRST_TRACES]
+  View traces
+
+Available options:
+  -d,--traces-dir TRACES_DIR
+                           Location of the directory with traces files, in
+                           textual format.
+  -f,--trace-rawfile TRACE_RAWFILE
+                           Location of the trace files, in raw format.
+  --tmin TMIN              Sample number for the start of the observation window
+                           [default: 0].
+  --tmax TMAX              Sample number for the end of the observation window
+                           [default: full trace length].
+  -n,--average-over AVG_SIZE
+                           Compute an average over AVG_SIZE traces [default: 1]
+  -m,--first-trace FIRST_TRACES
+                           Number of the first trace to consider [default: 0]
+  -h,--help                Show this help text
+#+END_EXAMPLE
+
+Typical usage:
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny view -f tests/traces/unprotected.raw -n 16
+#+END_EXAMPLE
+
+*** CPA
+
+Run a correlation power analysis.
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny cpa --help
+Usage: mylittlepwny cpa ((-d|--traces-dir TRACES_DIR) |
+                        (-f|--trace-rawfile TRACE_RAWFILE)) [--tmin TMIN]
+                        [--tmax TMAX] (-t|--textfile TEXTFILE)
+                        [-k|--keyfile KEYFILE] [-n|--nbtraces NSIWE]
+                        [-b|--byte BYTE]
+  CPA analysis
+
+Available options:
+  -d,--traces-dir TRACES_DIR
+                           Location of the directory with traces files, in
+                           textual format.
+  -f,--trace-rawfile TRACE_RAWFILE
+                           Location of the trace files, in raw format.
+  --tmin TMIN              Sample number for the start of the observation window
+                           [default: 0].
+  --tmax TMAX              Sample number for the end of the observation window
+                           [default: full trace length].
+  -t,--textfile TEXTFILE   Location of the plaintexts file
+  -k,--keyfile KEYFILE     Location of the key file
+  -n,--nbtraces NSIWE      Number of traces used for the CPA analysis [default:
+                           512]
+  -b,--byte BYTE           Number of the key byte to attack [default: 0]
+  -h,--help                Show this help text
+#+END_EXAMPLE
+
+*** Non-specific t-test
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny ttest --help
+Usage: mylittlepwny ttest ((-d|--traces-dir TRACES_DIR) |
+                          (-f|--trace-rawfile TRACE_RAWFILE)) [--tmin TMIN]
+                          [--tmax TMAX] [-n|--nbtraces NSIWE]
+                          (-c|--classesFile CLASSESFILE)
+  Non-specific t-test
+
+Available options:
+  -d,--traces-dir TRACES_DIR
+                           Location of the directory with traces files, in
+                           textual format.
+  -f,--trace-rawfile TRACE_RAWFILE
+                           Location of the trace files, in raw format.
+  --tmin TMIN              Sample number for the start of the observation window
+                           [default: 0].
+  --tmax TMAX              Sample number for the end of the observation window
+                           [default: full trace length].
+  -n,--nbtraces NSIWE      Number of traces used for the CPA analysis [default:
+                           512]
+  -c,--classesFile CLASSESFILE
+                           Location of the 'classes file'
+  -h,--help                Show this help text
+#+END_EXAMPLE
+
+*** Non-specific t-test
+
++ Instead of a plaintext file, this test requires a 'separation file',
+  i.e. a file that describes the population each trace belongs to.
++ The separation is expected to follow the order of the traces in the
+  traces file.
++ This is a text file, containing either =0= or =1=, respectively for
+  the first and the second populations of traces used to build the
+  t-test.
+
+Example :
+#+BEGIN_EXAMPLE
+$ head separate-ttest-NS.txt
+0
+0
+0
+0
+1
+0
+0
+1
+0
+0
+#+END_EXAMPLE
+
+Example usage:
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny -f ~/src/SSPREW/traces/testfull-NS/traces.raw \
+               -c ~/src/SSPREW/traces/separate-ttest-NS.txt  \
+               -n 22000 --tmin 7500 --tmax 10000
+#+END_EXAMPLE
+
+*** Specific t-test
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny specific --help
+Usage: mylittlepwny specific ((-d|--traces-dir TRACES_DIR) |
+                             (-f|--trace-rawfile TRACE_RAWFILE)) [--tmin TMIN]
+                             [--tmax TMAX] [-n|--nbtraces NSIWE]
+                             (-t|--textfile TEXTFILE) (-k|--keyfile KEYFILE)
+                             (-b|--target-bit BIT)
+  Specific t-test
+
+Available options:
+  -d,--traces-dir TRACES_DIR
+                           Location of the directory with traces files, in
+                           textual format.
+  -f,--trace-rawfile TRACE_RAWFILE
+                           Location of the trace files, in raw format.
+  --tmin TMIN              Sample number for the start of the observation window
+                           [default: 0].
+  --tmax TMAX              Sample number for the end of the observation window
+                           [default: full trace length].
+  -n,--nbtraces NSIWE      Number of traces used for the CPA analysis [default:
+                           512]
+  -t,--textfile TEXTFILE   Location of the plaintexts file
+  -k,--keyfile KEYFILE     Location of the key file
+  -b,--target-bit BIT      single-bit t-test on bit #BIT in the output of the
+                           first SBOX
+  -h,--help                Show this help text
+#+END_EXAMPLE
+
+*** Specific t-test
+
+Run the t-test on the output of the first SubBytes operation.
+
+Currently requires at least:
+- a set of traces
+- the list of input plaintexts
+- the description of the secret key
+
+** Limitations and known issues
+
+*** Performance
+
++ =mylittlepwny= can exploit all the processors available on your
+  machine.  Increasing the number of processors/cores used should
+  reduce the processing time.
++ However, the performance is quite bad.  It may happen that the
+  execution time increases when all cores are used.  It may also
+  happen that the exection time is higher when running on all cores,
+  as compared to running on one core only!
++ To specify the number of cores used, run =mylittlepwny= as follows (here using 2 cores)
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny +RTS -N2 -RTS <… here come other options …>
+#+END_EXAMPLE
+
+or:
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny <… here come other options …> +RTS -N2
+#+END_EXAMPLE
+
+*** Format of trace files
+
+Raw files:
+currently, 16-bit int samples are only supported.
+
+*** CPA
+
+Model: Currently only supports the Hamming Weight.
+
+Hypothesis: can currently only target the output of the first
+SubBytes.
+
+*** non-specific t-test
+
+Target hypothesis: Currently only supports the output of the first SubBytes.
+
+* cpa-hyps
+
+*** Overview of program options
+
+#+BEGIN_SRC sh :exports both :results output
+stack exec cpa-hyps -- --help
+#+END_SRC
+
+#+results:
+#+begin_example
 cpa-hyps: compute hypothesis values for CPA attacks on AES.
 
 Usage: cpa-hyps [-o|--output FILE] [-n|--nb NUMBER] [-x|--seed SEED_VALUE]
                 COMMAND
-  Compute hypothesis values at the output of the first SBOX. Outputs the results
-  in a text file. Use COMMAND --help to see the list of options supported by
-  each command.
+  cpa-hyps: a few bunch of things to perform side channel attacks. Use COMMAND
+  --help to see the list of options supported by each command.
 
 Available options:
   -h,--help                Show this help text
   -o,--output FILE         Name of the output file (default: "output.txt")
   -n,--nb NUMBER           Size of the set of plaintexts
-                           generated (default: 1024)
+                           generated (default: 16384)
   -x,--seed SEED_VALUE     Seed of the random number generator (default: 0)
 
 Available commands:
+  version                  Print program version
   plaintexts               Generate a list of random plaintexts
-  firstsbox                Compute hypothesis values for the first SBOX.
+  addrk                    Compute hypothesis values for the first AddRoundKey,
+                           using a Hamming weight model.
+  sbox                     Compute hypothesis values for the first SBOX, using a
+                           Hamming weight model.
   ttest-fr                 Compute two populations of plaintexts for the
-                           specific fixed vs. random t-test, for the output of
-                           the first SBOX. Generates two output files: FILE0.txt
-                           and FILE1.txt named after the contents of the
-                           --output option.
+                           non-specific t-test (fixed vs. random), for the
+                           output of the first SBOX. Generates two plaintext
+                           files named after the contents of options
+                           --population0 and --population1.
   ttest-rr                 Compute two populations of plaintexts for the
-                           specific random vs. random t-test, for the output of
-                           the first SBOX. Generates two output files: FILE0.txt
-                           and FILE1.txt named after the contents of the
-                           --output option.
-#+END_EXAMPLE
+                           specific t-test (random vs. random), for the output
+                           of the first SBOX. Generates a list of plaintexts and
+                           a list of values {0,1} to separate the two t-test
+                           populations.
+#+end_example
+
+(org-babel-get-header)
 
 *** command =plaintexts=
 
 Use this command to generate a list of random plaintexts.  This
 command has no specific option.
 
-*** command =firstsbox=
+#+BEGIN_SRC sh :exports both :results output
+stack exec cpa-hyps -- plaintexts --help
+#+END_SRC
+
+#+results:
+: Usage: cpa-hyps plaintexts
+:   Generate a list of random plaintexts
+:
+: Available options:
+:   -h,--help                Show this help text
+
+*** command =sbox=
 
 Use this command to generate the CPA correlation hypothesis at the
 output of the first SubBytes computation in AES.  Currently we use the
 Hamming Weight to compute the power model.
 
-#+BEGIN_EXAMPLE
-$ cpa-hyps firstsbox  --help
-Usage: cpa-hyps firstsbox (-p|--plaintexts ARG) [-b|--byte ARG]
-  Compute hypothesis values for the first SBOX.
+#+BEGIN_SRC sh :exports both :results output
+stack exec cpa-hyps -- sbox --help
+#+END_SRC
 
-Available options:
-  -p,--plaintexts ARG      Name of the input file containing the plaintext
-                           values
-  -b,--byte ARG            Byte number in [0..15] used to compute CPA
-                           correlation hypothesis (default: 0)
-  -h,--help                Show this help text
-#+END_EXAMPLE
+#+results:
+: Usage: cpa-hyps sbox (-p|--plaintexts ARG) [-b|--byte ARG]
+:   Compute hypothesis values for the first SBOX, using a Hamming weight model.
+:
+: Available options:
+:   -p,--plaintexts ARG      Name of the input file containing the plaintext
+:                            values
+:   -b,--byte ARG            Byte number in [0..15] used to compute CPA
+:                            correlation hypothesis (default: 0)
+:   -h,--help                Show this help text
 
 ******** TODO introduce the Hamming Distance model
     :PROPERTIES:
@@ -129,47 +523,61 @@ Available options:
 Provides two input plaintext populations to perform a specific fixed vs. random
 t-test.
 
-#+BEGIN_EXAMPLE
- cpa-hyps ttest-fr  --help
-Usage: cpa-hyps ttest-fr [-0|--fixed ARG] [-1|--random ARG]
-  Compute two populations of plaintexts for the specific fixed vs. random
-  t-test, for the output of the first SBOX. Generates two output files:
-  FILE0.txt and FILE1.txt named after the contents of the --output option.
+#+BEGIN_SRC sh :exports both :results output
+stack exec cpa-hyps -- ttest-fr --help
+#+END_SRC
+
+#+results:
+#+begin_example
+Usage: cpa-hyps ttest-fr [-p|--plaintexts ARG] [-s|--separate ARG]
+  Compute two populations of plaintexts for the non-specific t-test (fixed vs.
+  random), for the output of the first SBOX. Generates two plaintext files named
+  after the contents of options --population0 and --population1.
 
 Available options:
-  -0,--fixed ARG           name of the output file containing the fixed
-                           plaintext values (default: "fixed.txt")
-  -1,--random ARG          name of the output file containing the random
-                           plaintext values (default: "randoms.txt")
+  -p,--plaintexts ARG      Name of the output file containing the plaintext
+                           values for the two
+                           populations. (default: "plaintexts.txt")
+  -s,--separate ARG        This generated files has the same length than the
+                           plaintext file. It contains a list of integer values
+                           either 0 or 1, in order to separate the plaintexts
+                           between two populations '0' and
+                           '1'. (default: "text-separate.txt")
   -h,--help                Show this help text
-#+END_EXAMPLE
+#+end_example
 
 *** command =ttest=rr=
 
 Provides two input plaintext populations to perform a specific random vs. random
 t-test.
 
-#+BEGIN_EXAMPLE
-$ cpa-hyps ttest-rr  --help
+#+BEGIN_SRC sh :exports both :results output
+stack exec cpa-hyps -- ttest-rr --help
+#+END_SRC
+
+#+results:
+#+begin_example
 Usage: cpa-hyps ttest-rr (-k|--key KEYFILE) [-b|--bit-number BIT_NUMBER]
-                         [-0|--population0 ARG] [-1|--population1 ARG]
-  Compute two populations of plaintexts for the specific random vs. random
-  t-test, for the output of the first SBOX. Generates two output files:
-  FILE0.txt and FILE1.txt named after the contents of the --output option.
+                         [-p|--plaintexts ARG] [-s|--separate ARG]
+                         [-c|--ciphers CIPHERS]
+  Compute two populations of plaintexts for the specific t-test (random vs.
+  random), for the output of the first SBOX. Generates a list of plaintexts and
+  a list of values {0,1} to separate the two t-test populations.
 
 Available options:
   -k,--key KEYFILE         the input key file
   -b,--bit-number BIT_NUMBER
                            number of the state bit observed (default: 0)
-  -0,--population0 ARG     name of the output file containing the plaintext
-                           values for population 0 (default: "population0.txt")
-  -1,--population1 ARG     name of the output file containing the plaintext
-                           values for population 1 (default: "population1.txt")
+  -p,--plaintexts ARG      Name of the output file containing the plaintext
+                           values for the two
+                           populations. (default: "plaintexts.txt")
+  -s,--separate ARG        This generated files has the same length than the
+                           plaintext file. It contains a list of integer values
+                           either 0 or 1, in order to separate the plaintexts
+                           between two populations '0' and
+                           '1'. (default: "text-separate.txt")
+  -c,--ciphers CIPHERS     Generate the lists of expected cipher values in file
+                           CIPHERS. The file is not generated if this option is
+                           not used.
   -h,--help                Show this help text
-#+END_EXAMPLE
-
-** test
-
-#+BEGIN_SRC sh
-make test
-#+END_SRC
+#+end_example

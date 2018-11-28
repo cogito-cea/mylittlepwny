@@ -16,3 +16,6 @@ release:
 	stack image container
 	docker save -o mylittlepwny-3034931.tar.gz mylittlepwny:latest
 .PHONY: all setup build test release
+
+README.pdf: README.org
+	emacs -l .emacs.init --batch $< --eval "(org-beamer-export-to-pdf)"

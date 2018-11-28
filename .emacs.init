@@ -1,0 +1,13 @@
+(require 'org-install)
+(add-to-list 'load-path "/usr/share/org-mode/lisp")
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/emacs-goodies-el")
+
+(require 'package)
+(require 'ox-latex)
+(org-babel-do-load-languages
+ (quote org-babel-load-languages)
+ (quote ((shell . t)
+         (org . t)
+         )))
+
+(setq org-confirm-babel-evaluate 'nil)
