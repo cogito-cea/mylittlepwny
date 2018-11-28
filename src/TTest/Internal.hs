@@ -1,6 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  TTest.Internal
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- T-test.  Common components for the specific and non-specific t-tests.
+-----------------------------------------------------------------------------
+
+
 module TTest.Internal where
 
 

@@ -1,11 +1,23 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
--- | Description of bit positions in an integral value. The main
--- purpose of this module is to provide the type 'BitPos' and
--- associated helpers.
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Aes.Bits
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Description of bit positions in an integral value. The main purpose
+-- of this module is to provide the type 'BitPos' and associated
+-- helpers.
 --
 -- This module is different from 'Data.Bits', which provides bitwise
 -- functions over integral types.
+-----------------------------------------------------------------------------
+
 
 module Aes.Bits where
 

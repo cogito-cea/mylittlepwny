@@ -1,6 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  TTest.NonSpecific
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Non specific t-test.  Implementation of the command 'ttest'
+--
+-----------------------------------------------------------------------------
+
 module TTest.NonSpecific
   ( ttestNonSpecific
   , TTestNonSpecificOptions(..)

@@ -1,3 +1,18 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  CLI.Internal
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- CLI, internal functions.  Each tool command defines its CLI parser,
+-- which could make use of some of the functions in this module.
+--
+-----------------------------------------------------------------------------
+
 module CLI.Internal
   ( parseNbTraces
   , parseTraces

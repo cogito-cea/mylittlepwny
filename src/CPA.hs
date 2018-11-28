@@ -5,6 +5,20 @@
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  CPA
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Correlation Power Analysis.  Implementation of the command 'cpa'
+--
+-----------------------------------------------------------------------------
+
 module CPA
   ( cpa
   , CPAOptions(..)

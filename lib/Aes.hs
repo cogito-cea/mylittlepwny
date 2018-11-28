@@ -1,7 +1,17 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  AES
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
 --
--- Adapted from:
---   unconceived.net - Justin Handville - j.p.handville (at) gmail DOT com
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
 --
+-- An implementation of AES in Haskell, for educational purposes.
+-----------------------------------------------------------------------------
+
+
 module Aes
   ( -- * data definitions
     Plaintext

@@ -1,6 +1,17 @@
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Aes.Types
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+-----------------------------------------------------------------------------
+
 module Aes.Types
   where
 

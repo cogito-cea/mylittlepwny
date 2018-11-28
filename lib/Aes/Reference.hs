@@ -1,3 +1,20 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Aes.Reference
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- An implementation of AES in Haskell, for educational purposes.
+--
+-- This module is the core of the cryptographic implementation of AES.
+-- Adapted from:
+--   unconceived.net - Justin Handville - j.p.handville (at) gmail DOT com
+-----------------------------------------------------------------------------
+
 module Aes.Reference where
 
 import           Data.Array

@@ -1,6 +1,19 @@
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  AESImport
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-----------------------------------------------------------------------------
+
+
 module AesImport
   ( AesText
   , Byte

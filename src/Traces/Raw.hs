@@ -1,15 +1,19 @@
 {-# LANGUAGE RecordWildCards #-}
 
+-----------------------------------------------------------------------------
 -- |
 -- Module      :  Traces.Raw
--- Copyright   :  (c) CEA, 2018
--- License     :  see LICENSE
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
 --
--- Maintainer  :  damien.courousse@cea.fr
--- Stability   :  internal
--- Portability :
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
 --
 -- Simple interface for loading side-channel traces from a raw data file.
+--
+-----------------------------------------------------------------------------
+
 
 
 module Traces.Raw

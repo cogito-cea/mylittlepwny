@@ -1,12 +1,20 @@
-{-|
-
-Most of this module was inspired by Gabriel Gonzalez's foldl library,
-   and by Ed Kmett's folds library: I needed the completeness of
-   foldl, but with the flexibility of folds.  This re-implementation
-   is based on folds, but re-implements the statistics functions
-   provided by foldl, except for Pearson's correlation and for Welch's
-   t-test.
--}
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Folds
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Most of the code in this module was inspired by Gabriel Gonzalez's
+-- foldl library, and by Ed Kmett's folds library: I needed the
+-- completeness of foldl, but with the flexibility of folds.  This
+-- re-implementation is based on folds, but re-implements the
+-- statistics functions provided by foldl, except for Pearson's
+-- correlation and for Welch's t-test.
+-----------------------------------------------------------------------------
 
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE ScopedTypeVariables       #-}

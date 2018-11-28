@@ -1,5 +1,17 @@
 {-# LANGUAGE RankNTypes #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Aes.Util
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+-----------------------------------------------------------------------------
+
+
 module Aes.Util
   where
 

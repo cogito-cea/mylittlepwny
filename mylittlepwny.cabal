@@ -4,13 +4,11 @@ version:             0.3.0.0
 -- synopsis:
 -- A longer description of the package.
 -- description:
-license:             BSD3
+license:             OtherLicense
 license-file:        LICENSE
 author:              Damien Couroussé
 maintainer:          damien.courousse@cea.fr
--- A copyright notice.
--- copyright:
---
+copyright:           CEA, 2018
 -- category:
 build-type:          Simple
 -- Extra files to be distributed with the package, such as examples or a

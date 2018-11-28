@@ -1,3 +1,17 @@
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Traces
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-- Main interface module for the management of traces.
+--
+-----------------------------------------------------------------------------
+
 module Traces
   ( module Traces.Raw
   , module Traces.Text

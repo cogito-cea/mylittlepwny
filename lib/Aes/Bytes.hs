@@ -1,5 +1,17 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
+-----------------------------------------------------------------------------
+-- |
+-- Module      :  Aes.Bytes
+-- Copyright   :  (c) CEA 2018
+-- License     :  CeCILL-B (see the file LICENSE)
+--
+-- Maintainer  :
+-- Stability   :  experimental
+-- Portability :  portable
+--
+-----------------------------------------------------------------------------
+
 module Aes.Bytes
   ( HasByte
   , bytes
