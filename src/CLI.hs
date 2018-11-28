@@ -15,8 +15,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings     #-}
 
--- | main CLI options
-
 module CLI
   ( cli
   ) where
