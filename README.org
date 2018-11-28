@@ -25,8 +25,6 @@
 
 *** Get the source code
 
-bla
-
 ******** TODO repo pour le code source
     :PROPERTIES:
    :TRIGGER:  chain-find-next(TODO,todo-only)
@@ -56,7 +54,7 @@ image.
 
 Load the docker image:
 #+BEGIN_EXAMPLE
-$ docker load -i mylittlepwny-<GITCOMMIT>.tar.gz
+$ docker load -i mylittlepwny-<VERSION>.tar.gz
 #+END_EXAMPLE
 
 Run it:
@@ -76,7 +74,46 @@ Available commands:
   cpa                      CPA analysis
   ttest                    Non-specific t-test
   specific                 Specific t-test
-dockeruser@9e2f8654b323:/mylittlepwny$
+#+END_EXAMPLE
+
+*** Run that thing.  Using stack
+
+#+BEGIN_EXAMPLE
+$ stack exec mylittlepwny -- --version
+0.4.0.0
+#+END_EXAMPLE
+
+You can install =mylittlepwny= locally in =$HOME/.local/bin= with:
+#+BEGIN_EXAMPLE
+stack install
+#+END_EXAMPLE
+
+Once =$HOME/.local/bin= is declared in your =PATH= variable:
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny --version
+0.4.0.0
+#+END_EXAMPLE
+
+*** Run that thing.  Using the docker image
+
+Suppose we want to use the tool on some traces located on the host
+machine in the directory =TRACES=.
+
+Either run commands from a docker container:
+#+BEGIN_EXAMPLE
+$ docker run -it --rm -v ~/src/SSPREW/traces:/traces mylittlepwny bash
+Starting with UID : 9001
+dockeruser@3971267adbab:/mylittlepwny$ mylittlepwny --version
+0.4.0.0
+#+END_EXAMPLE
+
+Or instantiate a new container each time:
+
+#+BEGIN_EXAMPLE
+$ docker run -it --rm -v ~/src/SSPREW/traces:/traces mylittlepwny mylittlepwny --version
+Starting with UID : 9001
+0.4.0.0
 #+END_EXAMPLE
 
 ** Format of the side-channel traces
