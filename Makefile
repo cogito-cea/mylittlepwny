@@ -1,6 +1,8 @@
 all: build
 
 GITCOMMIT:=$(shell git log -1 --pretty=format:"%h")
+GITVERSION:=$(shell git describe --tags)
+
 
 test: build
 	stack test
@@ -11,10 +13,13 @@ setup:
 clean:
 	stack clean
 
-release:
+docker-test:
+	stack --docker test
+
+release: docker-test README.pdf
 	stack --docker build
 	stack image container
-	docker save -o mylittlepwny-3034931.tar.gz mylittlepwny:latest
+	docker save -o mylittlepwny-$(GITVERSION).tar.gz mylittlepwny:latest
 .PHONY: all setup build test release
 
 README.pdf: README.org
