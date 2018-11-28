@@ -11,9 +11,10 @@ maintainer:          damien.courousse@cea.fr
 copyright:           CEA, 2018
 -- category:
 build-type:          Simple
--- Extra files to be distributed with the package, such as examples or a
--- README.
--- extra-source-files:
+extra-source-files:  README.org
+                   , tests/traces/unprotected.raw
+                   , tests/traces/plaintexts.txt
+                   , tests/traces/key.txt
 cabal-version:       >=1.10
 
 flag debug
@@ -62,6 +63,7 @@ executable cpa-hyps
   else
     ghc-options:    -Wall -threaded
   hs-source-dirs:      .
+  default-language:    Haskell2010
 
   if flag(development)
     ghc-options:    -Wall
@@ -103,6 +105,7 @@ executable mylittlepwny
   hs-source-dirs:      .
   ghc-options:       -Wall -O2 -threaded -rtsopts -with-rtsopts=-N
   ghc-options:       -Wno-name-shadowing
+  default-language:    Haskell2010
 
   if flag(threadscope)
     ghc-options:     -Wall -O2 -threaded -rtsopts "-with-rtsopts=-ls -N" -eventlog
