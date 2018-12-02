@@ -511,7 +511,7 @@ Target hypothesis: Currently only supports the output of the first SubBytes.
 
 *** Overview of program options
 
-#+BEGIN_SRC sh :exports both :results output
+#+BEGIN_SRC shell :exports both :results output
 stack exec cpa-hyps -- --help
 #+END_SRC
 
@@ -557,7 +557,7 @@ Available commands:
 Use this command to generate a list of random plaintexts.  This
 command has no specific option.
 
-#+BEGIN_SRC sh :exports both :results output
+#+BEGIN_SRC shell :exports both :results output
 stack exec cpa-hyps -- plaintexts --help
 #+END_SRC
 
@@ -574,7 +574,7 @@ Use this command to generate the CPA correlation hypothesis at the
 output of the first SubBytes computation in AES.  Currently we use the
 Hamming Weight to compute the power model.
 
-#+BEGIN_SRC sh :exports both :results output
+#+BEGIN_SRC shell :exports both :results output
 stack exec cpa-hyps -- sbox --help
 #+END_SRC
 
@@ -599,7 +599,7 @@ stack exec cpa-hyps -- sbox --help
 Provides two input plaintext populations to perform a specific fixed vs. random
 t-test.
 
-#+BEGIN_SRC sh :exports both :results output
+#+BEGIN_SRC shell :exports both :results output
 stack exec cpa-hyps -- ttest-fr --help
 #+END_SRC
 
@@ -622,12 +622,13 @@ Available options:
   -h,--help                Show this help text
 #+end_example
 
+
 *** command =ttest=rr=
 
 Provides two input plaintext populations to perform a specific random vs. random
 t-test.
 
-#+BEGIN_SRC sh :exports both :results output
+#+BEGIN_SRC shell :exports both :results output
 stack exec cpa-hyps -- ttest-rr --help
 #+END_SRC
 
