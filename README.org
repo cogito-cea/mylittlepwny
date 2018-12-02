@@ -21,14 +21,13 @@
 
 * mylittlepwny
 
+******** TODO add a few intro words
+
 ** Setup, build, test
 
 *** Get the source code
 
-******** TODO repo pour le code source
-    :PROPERTIES:
-   :TRIGGER:  chain-find-next(TODO,todo-only)
-   :END:
+https://github.com/cogito-cea/mylittlepwny
 
 *** Build that thing
 
@@ -76,6 +75,17 @@ Available commands:
   specific                 Specific t-test
 #+END_EXAMPLE
 
+*** Run that thing.  Frow =$PATH=
+
+Assuming that =mylittlepwny= is install somewhere in one of the
+directories listed in =$PATH= (for exemple, in =$HOME/.local/bin=
+after a =stack install=):
+
+#+BEGIN_EXAMPLE
+$ mylittlepwny --version
+0.4.0.0
+#+END_EXAMPLE
+
 *** Run that thing.  Using stack
 
 #+BEGIN_EXAMPLE
@@ -102,7 +112,7 @@ machine in the directory =TRACES=.
 
 Either run commands from a docker container:
 #+BEGIN_EXAMPLE
-$ docker run -it --rm -v ~/src/SSPREW/traces:/traces mylittlepwny bash
+$ docker run -it --rm -v $(pwd)/tests/traces:/traces mylittlepwny bash
 Starting with UID : 9001
 dockeruser@3971267adbab:/mylittlepwny$ mylittlepwny --version
 0.4.0.0
@@ -111,7 +121,7 @@ dockeruser@3971267adbab:/mylittlepwny$ mylittlepwny --version
 Or instantiate a new container each time:
 
 #+BEGIN_EXAMPLE
-$ docker run -it --rm -v ~/src/SSPREW/traces:/traces mylittlepwny mylittlepwny --version
+$ docker run -it --rm -v $(pwd)/tests/traces:/traces mylittlepwny mylittlepwny --version
 Starting with UID : 9001
 0.4.0.0
 #+END_EXAMPLE
@@ -120,18 +130,18 @@ Starting with UID : 9001
 
 *** Format of the side-channel traces: raw files
 
-A raw file contains:
-- a small header of two 32-bit =unsigned int=:
-  - number of samples per side-channel trace
-  - byte size of each sample.
-- the stream of samples
-
 #+BEGIN_EXAMPLE
 # header:
 <number of samples> <sample size>
 # the stream of samples
 <sample> <sample> <sample>
 #+END_EXAMPLE
+
+A raw file contains:
+- a small header of two 32-bit =unsigned int=:
+  - number of samples per side-channel trace
+  - byte size of each sample.
+- the stream of samples
 
 *** Format of the side-channel traces: text files
 
@@ -160,7 +170,7 @@ code, for test purposes, in directory =tests/traces=.
 *** Test: view traces
 
 #+BEGIN_EXAMPLE
-$ mylittlepwny view -f tests/traces/unprotected.raw  -n 16
+$ stack exec mylittlepwny -- view -f tests/traces/unprotected.raw  -n 16
 View Settings:
 average over:               16
 tmin:                        0
@@ -173,7 +183,7 @@ Rendering the view plot in: tests/traces/Traces avg:16 n:0 tmin:00000 tmax:01000
 *** Test: CPA
 
 #+BEGIN_EXAMPLE
-$ mylittlepwny cpa -f tests/traces/unprotected.raw -t tests/traces/plaintexts.txt -n 100
+$ stack exec mylittlepwny -- cpa -f tests/traces/unprotected.raw -t tests/traces/plaintexts.txt -n 100
 CPA Settings:
 number of traces:          100
 tmin:                        0
@@ -188,8 +198,13 @@ Rendering the CPA plot in: tests/traces/CPA-D byte:0 n:100 tmin:00000 tmax:01000
 
 *** Test: non-specific t-test
 
-would require a set of side-channel of trace that is different from
+This test would require a set of side-channel of trace that is different from
 the set of traces provided in the =tests= directory.
+
+******** TODO add a set of traces for the non-specific t-test
+    :PROPERTIES:
+    :TRIGGER:  chain-find-next(TODO,todo-only)
+    :END:
 
 *** Test: specific t-test
 
@@ -197,7 +212,7 @@ Caution note: you need more side-channel traces to get something
 interesting out of this.
 
 #+BEGIN_EXAMPLE
-$ mylittlepwny specific -f tests/traces/unprotected.raw -t tests/traces/plaintexts.txt -k tests/traces/key.txt -n 100 -b 0
+$ stack exec mylittlepwny -- specific -f tests/traces/unprotected.raw -t tests/traces/plaintexts.txt -k tests/traces/key.txt -n 100 -b 0
 Specific t-test.  Settings:
 Total number of traces:        100
 tmin:                            0
@@ -428,6 +443,30 @@ Currently requires at least:
 - a set of traces
 - the list of input plaintexts
 - the description of the secret key
+
+** FAQ
+
+*** What is this error? =Data.Binary.Get.runGet at position 0: not enough bytes=
+
+Issue:
+#+BEGIN_EXAMPLE
+mylittlepwny: Data.Binary.Get.runGet at position 0: not enough bytes
+CallStack (from HasCallStack):
+  error, called at libraries/binary/src/Data/Binary/Get.hs:351:5 in binary-0.8.5.1:Data.Binary.Get
+#+END_EXAMPLE
+
+Solution: run with option =-n= | =--nb=
+
+Explanation:
+By default, the analysis are run with 512 traces if option =-n= is not
+set.  It may happen that the input set of traces contains less than
+512 traces, which will lead to this error.
+This behaviour should be fixed in the near future.
+
+******** TODO fix issue when the set of traces contains less than 512 traces.
+    :PROPERTIES:
+    :TRIGGER:  chain-find-next(TODO,todo-only)
+    :END:
 
 ** Limitations and known issues
 
