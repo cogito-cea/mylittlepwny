@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilies #-}
+
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Traces.Internal
@@ -17,9 +19,15 @@ import qualified Data.Vector.Unboxed as U
 
 type Trace a = U.Vector a
 
+newtype TMin = TMin Int
+  deriving (Eq, Show, Ord)
+newtype TMax = TMax Int
+  deriving (Eq, Show, Ord)
+
 class HasTraces handle where
-  init :: FilePath -> IO handle
+  type InitData handle
+  init :: InitData handle -> IO handle
   close :: handle -> IO ()
   load :: (Read a, Num a, U.Unbox a) => handle -> IO (Trace a)
-  load' :: (Read a, Num a, U.Unbox a) => handle -> Int -> Int -> IO (Trace a)
+  loadWindow :: (Read a, Num a, U.Unbox a) => handle -> TMin -> TMax -> IO (Trace a)
   size :: handle -> Int

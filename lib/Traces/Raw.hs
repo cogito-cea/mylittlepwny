@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeFamilies    #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -31,10 +32,11 @@ import qualified System.IO            as IO
 import           Traces.Internal
 
 instance HasTraces HandleRaw where
+  type InitData HandleRaw = FilePath
   init = Traces.Raw.init
   close = Traces.Raw.close
   load = Traces.Raw.load
-  load' = Traces.Raw.load'
+  loadWindow = Traces.Raw.loadW
   size = Traces.Raw.size
 
 data HandleRaw = HandleRaw
@@ -84,12 +86,12 @@ load HandleRaw{..} = do
 --
 -- MAYBE. use Conduit?
 --   load' :: HandleRaw -> Int -> Int -> ConduitT () (Trace Float) m ()
-load' :: (U.Unbox a, Num a)
+loadW :: (U.Unbox a, Num a)
       => HandleRaw
-      -> Int     -- ^ 'tmin'. Index of the first sample in the observation window
-      -> Int     -- ^ 'tmax'. 'tmax-1' is the index of the last sample in the observation window
+      -> TMin     -- ^ 'tmin'. Index of the first sample in the observation window
+      -> TMax     -- ^ 'tmax'. 'tmax-1' is the index of the last sample in the observation window
       -> IO (Trace a)
-load' HandleRaw{..} tmin tmax = do
+loadW HandleRaw{..} (TMin tmin) (TMax tmax) = do
   raw <- BL.hGet handle sizeB
   return $ runGet getTrace raw
   where

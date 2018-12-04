@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards   #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -31,10 +32,11 @@ import           Text.Printf           (printf)
 import           Traces.Internal
 
 instance HasTraces HandleText where
+  type InitData HandleText = FilePath
   init = Traces.Text.init
   close = Traces.Text.close
   load = Traces.Text.load
-  load' = Traces.Text.load'
+  loadWindow = Traces.Text.loadW
   size = Traces.Text.size
 
 
@@ -83,13 +85,13 @@ size HandleText{..} = sampleNb
 -- | Load one trace, filter samples out of the observation window.
 --
 -- MAYBE. use Conduit?
---   load' :: Handle -> Int -> Int -> ConduitT () (Trace Float) m ()
-load' :: (Read a, U.Unbox a)
+--   loadW :: Handle -> Int -> Int -> ConduitT () (Trace Float) m ()
+loadW :: (Read a, U.Unbox a)
       => HandleText
-      -> Int     -- ^ 'tmin'. Index of the first sample in the observation window
-      -> Int     -- ^ 'tmax'. 'tmax-1' is the index of the last sample in the observation window
+      -> TMin     -- ^ 'tmin'. Index of the first sample in the observation window
+      -> TMax     -- ^ 'tmax'. 'tmax-1' is the index of the last sample in the observation window
       -> IO (Trace a)
-load' (HandleText tdir nref _nb) tmin tmax = do
+loadW (HandleText tdir nref _nb) (TMin tmin) (TMax tmax) = do
   n <- readIORef nref
   -- MAYBE - read with the text package
   raw <- readFile $ tdir </> printf "trace_%09d.txt" n

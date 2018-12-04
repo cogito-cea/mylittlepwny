@@ -36,6 +36,8 @@ import           System.FilePath.Posix                  (takeDirectory, (</>))
 import           Text.Printf                            (printf)
 
 import           CLI.Internal
+import           Traces                                 (TMax (TMax),
+                                                         TMin (TMin))
 import qualified Traces                                 as Traces
 import           TTest.Internal
 
@@ -65,7 +67,7 @@ ttestNonSpecific TTestNonSpecificOptions{..} = do
 
   -- t-test analysis
   let loadTraces :: MonadIO m => ConduitT () (Traces.Trace Float) m ()
-      loadTraces = repeatMC (liftIO $ loadfun tmin tmax)
+      loadTraces = repeatMC (liftIO $ loadfun (TMin tmin) (TMax tmax))
 
       loadClasses :: MonadResource m => ConduitT i Class m ()
       loadClasses = sourceFile classesFile

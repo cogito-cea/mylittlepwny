@@ -42,6 +42,8 @@ import           Aes
 import           Aes.Hypothesis
 import           AesImport
 import           CLI.Internal
+import           Traces                                 (TMax (TMax),
+                                                         TMin (TMin))
 import qualified Traces                                 as Traces
 import           TTest.Internal
 
@@ -91,7 +93,7 @@ ttestSpecific TTestSpecificOptions{..} = do
   texts <- take nbTraces <$> importTexts textFile
 
   let loadTraces :: MonadIO m => ConduitT () (Traces.Trace Float) m ()
-      loadTraces = repeatMC (liftIO $ loadfun tmin tmax)
+      loadTraces = repeatMC (liftIO $ loadfun (TMin tmin) (TMax tmax))
 
       loadTracePairs :: MonadResource m => ConduitT () (Pair Plaintext (Traces.Trace Float)) m ()
       loadTracePairs = getZipSource

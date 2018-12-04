@@ -48,6 +48,8 @@ import           Aes
 import           Aes.Hypothesis
 import           AesImport
 import           CLI.Internal
+import           Traces                                 (TMax (TMax),
+                                                         TMin (TMin))
 import qualified Traces                                 as Traces
 
 default (T.Text)
@@ -93,7 +95,7 @@ cpa CPAOptions{..} = do
                        <*> ZipSource (yieldMany $ map hypothesis texts)
 
       loadTraces :: MonadIO m => ConduitT () (Traces.Trace Float) m ()
-      loadTraces = repeatMC (liftIO $ loadfun tmin tmax)
+      loadTraces = repeatMC (liftIO $ loadfun (TMin tmin) (TMax tmax))
 
       hypothesis :: Plaintext -> [Float]
       hypothesis t = [ -- Hamming Weight

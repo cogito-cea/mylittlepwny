@@ -35,6 +35,8 @@ import           Text.Printf                            (printf)
 
 import           CLI.Internal
 import qualified Traces                                 as Traces
+import           Traces                                 (TMax (TMax),
+                                                         TMin (TMin))
 
 default (T.Text)
 
@@ -60,7 +62,7 @@ viewTraces ViewOptions{..} = do
 
   -- load and process traces
   let loadTraces :: MonadIO m => ConduitT () (Traces.Trace Float) m ()
-      loadTraces = repeatMC (liftIO $ loadfun tmin tmax)
+      loadTraces = repeatMC (liftIO $ loadfun (TMin tmin) (TMax tmax))
 
   trace <- runConduit
     $ loadTraces
