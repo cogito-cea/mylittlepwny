@@ -39,15 +39,23 @@ library
                      , Aes.Bits
                      , AesImport
                      , Masking
+                     , Traces
+                     , Traces.Text
+                     , Traces.Internal
+                     , Traces.Raw
   other-modules:       Aes.Reference
                      , Aes.Bytes
                      , Aes.Types
                      , Aes.Util
   build-depends:       base
                      , array
+                     , binary
                      , bytestring
                      , deepseq
+                     , filepath
                      , random
+                     , split
+                     , vector
   default-language:    Haskell2010
 
 
@@ -74,16 +82,12 @@ executable mylittlepwny
   other-modules:       Paths_mylittlepwny
                      , CLI
                      , CLI.Internal
-                     , CPA
                      , Folds
+                     , CPA
                      , TTest
                      , TTest.Internal
                      , TTest.NonSpecific
                      , TTest.Specific
-                     , Traces
-                     , Traces.Text
-                     , Traces.Internal
-                     , Traces.Raw
                      , View
   build-depends:       base
                      , Chart
