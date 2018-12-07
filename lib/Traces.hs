@@ -34,8 +34,8 @@ data TraceData = TracesDir FilePath
                deriving (Show, Eq)
 
 -- | A wrapper that hides the different modules that support traces
---   reading.  From a 'TraceData', this function will return a trace
---   handler, and a loadWindow function.
+--   reading.  From a 'TraceData', this function will return a
+--   loadWindow function, and a trace handler.
 importTraces :: (Read a, Num a, U.Unbox a)
   => TraceData -> IO (TMin -> TMax -> IO (Trace a), Int)
 importTraces traces = do

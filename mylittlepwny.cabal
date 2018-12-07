@@ -34,29 +34,45 @@ flag threadscope
 library
   hs-source-dirs:      lib
   exposed-modules:     Aes
+                     , Aes.Bits
                      , Aes.Hypothesis
                      , Aes.Random
-                     , Aes.Bits
                      , AesImport
+                     , CLI
+                     , CLI.Internal
+                     , CPA
                      , Masking
+                     , Paths_mylittlepwny
+                     , TTest
+                     , TTest.Internal
+                     , TTest.NonSpecific
+                     , TTest.Specific
                      , Traces
                      , Traces.Internal
                      , Traces.PicoScope
-                     , Traces.PicoScope.Stm32
                      , Traces.PicoScope.PicoScope
+                     , Traces.PicoScope.Stm32
                      , Traces.Raw
                      , Traces.Text
+                     , View
   other-modules:       Aes.Reference
                      , Aes.Bytes
                      , Aes.Types
                      , Aes.Util
   build-depends:       base
+                     , Chart
+                     , Chart-cairo
                      , array
+                     , async
                      , binary
                      , bytestring
+                     , conduit
                      , deepseq
                      , filepath
                      , foldl
+                     , formatting
+                     , optparse-applicative
+                     , parallel
                      , process
                      , random
                      , serialport
@@ -71,7 +87,6 @@ library
 
 executable cpa-hyps
   main-is:             cpa-hyps.hs
-  other-modules:       Paths_mylittlepwny
   build-depends:       base
                      , mylittlepwny
                      , random
@@ -90,26 +105,16 @@ executable mylittlepwny
   main-is:             mylittlepwny.hs
   hs-source-dirs:      src
   other-modules:       Paths_mylittlepwny
-                     , CLI
-                     , CLI.Internal
                      , Folds
-                     , CPA
-                     , TTest
-                     , TTest.Internal
-                     , TTest.NonSpecific
-                     , TTest.Specific
-                     , View
   build-depends:       base
                      , Chart
                      , Chart-cairo
                      , async
                      , binary
                      , bytestring
-                     , conduit
                      , deepseq
                      , filepath
                      , folds
-                     , formatting
                      , mylittlepwny
                      , optparse-applicative
                      , parallel

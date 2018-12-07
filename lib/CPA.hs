@@ -23,6 +23,16 @@ module CPA
   ( cpa
   , CPAOptions(..)
 
+  , CPATrace(CPATrace)
+  , PState
+  , emptyPState
+  , emptyPStates
+  , pearsonStep
+  , closePState
+
+  -- computing the correlation hypothesis
+  , hypothesis
+
   -- CLI
   , cmdCPAParser
   ) where
@@ -92,17 +102,10 @@ cpa CPAOptions{..} = do
       buildCPATraces = getZipSource
                        $ CPATrace
                        <$> ZipSource loadTraces
-                       <*> ZipSource (yieldMany $ map hypothesis texts)
+                       <*> ZipSource (yieldMany $ map (hypothesis byteOpt) texts)
 
       loadTraces :: MonadIO m => ConduitT () (Traces.Trace Float) m ()
       loadTraces = repeatMC (liftIO $ loadfun (TMin tmin) (TMax tmax))
-
-      hypothesis :: Plaintext -> [Float]
-      hypothesis t = [ -- Hamming Weight
-                       fromIntegral . popCount
-                       -- output of the first SBOX
-                       $ fstSBOX'' byteOpt k t | k <- [0..255]
-                     ]
 
   corrs <- runConduit
            $ buildCPATraces
@@ -132,13 +135,23 @@ cpa CPAOptions{..} = do
       plotCPAD plotOpts (CorrelationSKey $ cmaxs !! secret) (CorrelationHyps $ deleteAt secret cmaxs)
     )
 
+hypothesis :: Int        -- ^ the attacked byte
+           -> Plaintext  -- ^ known plaintext
+           -> [Float]    -- ^ list of hypothesis
+hypothesis byteOpt t =
+  [ -- Hamming Weight
+    fromIntegral . popCount
+    -- output of the first SBOX
+    $ fstSBOX'' byteOpt k t | k <- [0..255]
+  ]
+
 -- | Correlation for all hypothesis but the secret key
 newtype CorrelationHyps a = CorrelationHyps [Traces.Trace a]
 -- | Correlation for the secret key
 newtype CorrelationSKey a = CorrelationSKey (Traces.Trace a)
 
 pearson :: Monad m => ConduitT CPATrace Void m [(Traces.Trace Float, Traces.Trace Float)]
-pearson = closeState <$> foldlC foldState emptyState
+pearson = closePState <$> foldlC pearsonStep emptyPStates
 
 type PState = P (U.Vector Float) Float
 data P a b =
@@ -156,25 +169,28 @@ data CPATrace = CPATrace
                 ![Float]  -- a list of hypothesis values
 
 -- TODO use U.Vector.
--- emptyState ::  U.Vector ( PState (U.Vector Float) )
-emptyState :: [PState]
-emptyState = replicate 256 (P 0 u 0.0 u u 0.0 u)
-  where u = U.empty :: U.Vector Float
--- emptyState = zipWith const (repeat $ P 0 U.empty U.empty U.empty U.empty U.empty U.empty) [0::Int ..255]
+-- emptyPStates ::  U.Vector ( PState (U.Vector Float) )
+emptyPStates :: [PState]
+emptyPStates = replicate 256 emptyPState
+-- emptyPStates = zipWith const (repeat $ P 0 U.empty U.empty U.empty U.empty U.empty U.empty) [0::Int ..255]
 
-foldState :: [PState] -> CPATrace -> [PState]
-foldState states (CPATrace trace hyps) =
-  (zipWith (foldStep trace) states hyps) `using` (parListChunk numCapabilities) rdeepseq
-{-# INLINABLE foldState #-}
-foldStep :: (U.Vector Float) -> PState -> Float -> PState
-foldStep t (P 0 _ _ _ _ _ _) h = P 1 t h sxx' sxy' syy' max'
+emptyPState :: PState
+emptyPState = P 0 u 0.0 u u 0.0 u
+  where u = U.empty :: U.Vector Float
+
+pearsonStep :: [PState] -> CPATrace -> [PState]
+pearsonStep states (CPATrace trace hyps) =
+  (zipWith (subStep trace) states hyps) `using` (parListChunk numCapabilities) rdeepseq
+{-# INLINABLE pearsonStep #-}
+subStep :: (U.Vector Float) -> PState -> Float -> PState
+subStep t (P 0 _ _ _ _ _ _) h = P 1 t h sxx' sxy' syy' max'
   where
     zeros = U.map (const 0) t -- Assuming the two vectors have the same size
     sxx' = zeros -- sxx + devx*(x - xbar') = 0 + x * (x - x)
     sxy' = zeros
     syy' = 0.0
     max' = U.fromList [1] -- all correlation values are supposed to be '1' at the beginning.
-foldStep t (P n xbar ybar sxx sxy syy m) h = P n' xbar' ybar' sxx' sxy' syy' max'
+subStep t (P n xbar ybar sxx sxy syy m) h = P n' xbar' ybar' sxx' sxy' syy' max'
   where
     n' = n + 1
     devx = U.zipWith (-) t xbar
@@ -186,15 +202,19 @@ foldStep t (P n xbar ybar sxx sxy syy m) h = P n' xbar' ybar' sxx' sxy' syy' max
     syy' = syy + devy * (h - ybar')
     c = U.zipWith (/) sxy $ U.map (\q -> sqrt (q * syy)) sxx
     max' = m `U.snoc` U.maximum c
-{-# INLINABLE foldStep #-}
+{-# INLINABLE subStep #-}
 
-closeState :: [PState] -> [(Traces.Trace Float, Traces.Trace Float)]
-closeState = map step
+closePState :: [PState]
+            -> [ (Traces.Trace Float   -- trace of correlation hypothesis
+                 , Traces.Trace Float  -- trace of all maximum correlation values
+                 )
+               ]
+closePState = map step
   where
     step :: PState -> (Traces.Trace Float, Traces.Trace Float)
     step (P _ _ _ sxx sxy syy m) =
       (U.zipWith (/) sxy $ U.map (\x -> sqrt (x * syy)) sxx, m)
-{-# INLINABLE closeState #-}
+{-# INLINABLE closePState #-}
 
 data PlotCPA = PlotCPA
   { plotDir  :: FilePath
