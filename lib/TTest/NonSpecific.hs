@@ -23,6 +23,10 @@ module TTest.NonSpecific
   , cmdTTestNSParser
   ) where
 
+{- MAYBE remove use of the 'class file'.  Compare each plaintext with
+   the usual static value - cf. TLVA.
+-}
+
 import           Conduit
 import qualified Data.ByteString.Char8                  as BC
 import           Data.Maybe                             (fromMaybe)
