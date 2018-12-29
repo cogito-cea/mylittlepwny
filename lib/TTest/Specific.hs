@@ -45,7 +45,7 @@ import           CLI.Internal
 import           Traces                                 (TMax (TMax),
                                                          TMin (TMin))
 import qualified Traces                                 as Traces
-import           TTest.Internal
+import           TTest.Common
 
 default (T.Text)
 

@@ -3,7 +3,7 @@
 
 -----------------------------------------------------------------------------
 -- |
--- Module      :  TTest.Internal
+-- Module      :  TTest.Common
 -- Copyright   :  (c) CEA 2018
 -- License     :  CeCILL-B (see the file LICENSE)
 --
@@ -15,7 +15,7 @@
 -----------------------------------------------------------------------------
 
 
-module TTest.Internal where
+module TTest.Common where
 
 
 import           Conduit

@@ -44,7 +44,7 @@ library
                      , Masking
                      , Paths_mylittlepwny
                      , TTest
-                     , TTest.Internal
+                     , TTest.Common
                      , TTest.NonSpecific
                      , TTest.Specific
                      , Traces
