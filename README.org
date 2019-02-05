@@ -507,6 +507,17 @@ SubBytes.
 
 Target hypothesis: Currently only supports the output of the first SubBytes.
 
+** References
+
+Paul Bottinelli and Joppe W. Bos. Computational aspects of correlation
+power analysis. J. Cryptographic Engineering, 7(3):167–181, 2017.
+
+Other tools for side-channel analysis:
+- https://github.com/Riscure/Jlsca
+- https://github.com/newaetech/chipwhisperer-lint
+- https://github.com/ikizhvatov/dpa-tools-benchmarking
+- https://github.com/ikizhvatov/conditional-reduction
+
 * cpa-hyps
 
 *** Overview of program options
@@ -621,7 +632,6 @@ Available options:
                            '1'. (default: "text-separate.txt")
   -h,--help                Show this help text
 #+end_example
-
 
 *** command =ttest=rr=
 
