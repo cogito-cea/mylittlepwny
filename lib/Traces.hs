@@ -18,6 +18,7 @@ module Traces
   , TraceData(..)
   , TMin(..), TMax(..)
   , importTraces
+  , windowSize
   )
 where
 

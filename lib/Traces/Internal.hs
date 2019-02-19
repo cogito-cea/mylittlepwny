@@ -31,3 +31,6 @@ class HasTraces handle where
   load :: (Read a, Num a, U.Unbox a) => handle -> IO (Trace a)
   loadWindow :: (Read a, Num a, U.Unbox a) => handle -> TMin -> TMax -> IO (Trace a)
   size :: handle -> Int
+
+windowSize :: TMin -> TMax -> Int
+windowSize (TMin tmin) (TMax tmax) = tmax - tmin
