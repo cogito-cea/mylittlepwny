@@ -519,6 +519,7 @@ Other tools for side-channel analysis:
 - https://github.com/newaetech/chipwhisperer-lint
 - https://github.com/ikizhvatov/dpa-tools-benchmarking
 - https://github.com/ikizhvatov/conditional-reduction
+- https://github.com/Ledger-Donjon/lascar
 
 * cpa-hyps
 
