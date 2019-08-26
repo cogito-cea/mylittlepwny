@@ -128,6 +128,8 @@ Starting with UID : 9001
 
 ** Format of the side-channel traces
 
+The preferred (and most efficient) format is [[*Format of the side-channel traces: raw files][raw]].
+
 *** Format of the side-channel traces: raw files
 
 #+BEGIN_EXAMPLE
