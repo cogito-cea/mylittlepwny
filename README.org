@@ -140,11 +140,11 @@ The preferred (and most efficient) format is [[*Format of the side-channel trace
 #+END_EXAMPLE
 
 A raw file contains:
-- a small header of 2 32-bit =unsigned int=s:
+- a small header of 2 32-bit =unsigned int=s (little-endian):
   - =<nb of samples>=: number of samples per side-channel /trace/.  A
     full file will probably contain more that one side-channel /trace/.
   - =<sample size>=: byte size of each sample.  Each sample value is
-    expected to be encoded as =unsigned int= values.
+    expected to be encoded as =unsigned int= values (little-endian).
 - the stream of samples
 
 *** Format of the side-channel traces: text files

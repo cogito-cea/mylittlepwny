@@ -1,5 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE TypeFamilies    #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE RecordWildCards           #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -23,7 +24,7 @@ module Traces.Raw
   , Trace
   ) where
 
-import           Control.Monad        (replicateM, when)
+import           Control.Monad        (replicateM)
 import           Data.Binary.Get
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Vector.Unboxed  as U
@@ -39,10 +40,11 @@ instance HasTraces HandleRaw where
   loadWindow = Traces.Raw.loadW
   size = Traces.Raw.size
 
-data HandleRaw = HandleRaw
-  { handle   :: IO.Handle
-  , sizeB    :: !Int  -- ^ trace size, in bytes
-  , sampleNb :: !Int  -- ^ trace size, in elements
+data HandleRaw = forall a. Integral a => HandleRaw
+  { handle    :: IO.Handle
+  , sizeB     :: !Int  -- ^ trace size, in bytes
+  , sampleNb  :: !Int  -- ^ trace size, in elements
+  , getSample :: Get a -- ^ the low-level function for reading sample values
   }
 
 {-| The trace file has the following format:
@@ -58,13 +60,17 @@ init filename = do
   h <- IO.openFile filename IO.ReadMode
 
   -- read the number of samples per trace
-  s <- fromIntegral . runGet getInt32host <$> BL.hGet h 4
+  s <- fromIntegral . runGet getWord32le <$> BL.hGet h 4
 
   -- check that the sample size is 2.  We don't handle other cases currently.
-  ssize <- fromIntegral . runGet getInt32host <$> BL.hGet h 4
-  when (ssize /= 2) $ error "Wrong data format.  The file header tells that the sample size is not 2."
-
-  return $ HandleRaw h (s*ssize) s
+  ssize <- fromIntegral . runGet getWord32le <$> BL.hGet h 4
+  putStrLn $ "Traces.Raw: ssize = " ++ show ssize
+  return $ case ssize of
+        1 -> HandleRaw h (s*ssize) s getWord8
+        2 -> HandleRaw h (s*ssize) s getWord16le
+        4 -> HandleRaw h (s*ssize) s getWord32le
+        8 -> HandleRaw h (s*ssize) s getWord64le
+        _ -> error "Traces.Raw:  Unsupported data format."
 
 -- | Return the number of samples per trace
 size :: HandleRaw -> Int
@@ -80,7 +86,7 @@ load HandleRaw{..} = do
   return $ runGet getTrace raw
   where
     getTrace :: (U.Unbox a, Num a) => Get (Trace a)
-    getTrace = U.fromList . map fromIntegral <$> replicateM sampleNb getInt16host
+    getTrace = U.fromList . map fromIntegral <$> replicateM sampleNb getSample
 
 -- | Load one trace, filter samples out of the observation window.
 --
@@ -96,7 +102,7 @@ loadW HandleRaw{..} (TMin tmin) (TMax tmax) = do
   return $ runGet getTrace raw
   where
     getTrace :: (U.Unbox a, Num a) => Get (Trace a)
-    getTrace = U.fromList . map fromIntegral . take (tmax - tmin) . drop (tmin-1) <$> replicateM sampleNb getInt16host
+    getTrace = U.fromList . map fromIntegral . take (tmax - tmin) . drop (tmin-1) <$> replicateM sampleNb getSample
 
 -- | Close the trace handler.  Actually, this function does nothing.
 close :: HandleRaw -> IO ()
