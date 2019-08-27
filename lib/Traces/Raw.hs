@@ -61,10 +61,11 @@ init filename = do
 
   -- read the number of samples per trace
   s <- fromIntegral . runGet getWord32le <$> BL.hGet h 4
+  putStrLn $ "Traces.Raw: number of samples = " ++ show s
 
   -- check that the sample size is 2.  We don't handle other cases currently.
   ssize <- fromIntegral . runGet getWord32le <$> BL.hGet h 4
-  putStrLn $ "Traces.Raw: ssize = " ++ show ssize
+  putStrLn $ "Traces.Raw: sample size = " ++ show ssize
   return $ case ssize of
         1 -> HandleRaw h (s*ssize) s getWord8
         2 -> HandleRaw h (s*ssize) s getWord16le
