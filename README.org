@@ -133,10 +133,10 @@ The preferred (and most efficient) format is [[*Format of the side-channel trace
 *** Format of the side-channel traces: raw files
 
 #+BEGIN_EXAMPLE
-# header:
-<nb of samples> <sample size>
-# the stream of samples
-<sample> <sample> <sample> ...
+<nb of samples><sample size><sample><sample><sample> ...
+^                           ^
+|                           +-- raw data
++-- header
 #+END_EXAMPLE
 
 A raw file contains:
