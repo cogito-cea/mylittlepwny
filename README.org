@@ -21,7 +21,25 @@
 
 * mylittlepwny
 
-******** TODO add a few intro words
+  =mylittlepwny= is a small framework for side-channel analysis.
+  At the time I started writing this, it was difficult to find
+  published frameworks for side-channel analysis.  Many people would
+  use Matlab, which was slooow.  And the experts in the field would
+  not publish their tools.
+
+  Nowadays, several good alternatives have been published.
+
+  The main motivations for writing yet another framework were
+  initially:
+  - /scratch your own itch/.   Considering the use of Haskell for
+    real-life programming tasks.   Writing program for
+    compute-intensive tasks in Haskell is quite challenging (probably
+    not the best tool, but not the worst either).  There are many ways
+    the current implementation could be improved, but I
+    learned a lot in this journey!
+  - I had to prepare a tutorial for side-channel analysis at [[http://www.pprew.org/2018-8/program.htm][SSPREW,
+    2018]], and struggled at that time to find a framework that would
+    fit the bill.
 
 ** Setup, build, test
 
